@@ -4,13 +4,18 @@
     python3 move-sync.py sets          # download every Set as <Name>.ablbundle
     python3 move-sync.py list          # browse Move's file tree
     python3 move-sync.py pull Samples  # mirror a raw bucket (Samples, Recordings...)
+    python3 move-sync.py push bed_v03.wav "Bisonte Club 2"
+                                       # upload into Samples/Bisonte/<Song>/
+    python3 move-sync.py push Beds/*.wav "Bisonte Club 2" --tempo 124
+                                       # ...and check each is a whole number of bars
 
 First run pairs with Move: it shows a confirmation code on its display, you
 type it here, and the session cookie (valid 30 days) is cached next to this
-script. Move must be in Standalone Mode (not Control Live) to pair.
+script. Move must be in Standalone Mode (not Control Live) to pair — and
+uploads are refused in Control Live mode too.
 """
 
-import http.cookiejar, json, os, sys, urllib.error, urllib.parse, urllib.request
+import http.cookiejar, json, os, sys, urllib.error, urllib.parse, urllib.request, wave
 
 HOST = os.environ.get("MOVE_HOST", "http://move.local")
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -104,6 +109,96 @@ def pull(enc_parts, dest):
             open(target, "wb").write(blob)
 
 
+def bars_of(path, tempo):
+    """Length of a WAV in bars at `tempo` (4/4). None if it isn't readable PCM."""
+    try:
+        with wave.open(path, "rb") as w:
+            seconds = w.getnframes() / float(w.getframerate())
+    except (wave.Error, EOFError, OSError):
+        return None
+    return seconds / (4.0 * 60.0 / tempo)
+
+
+def ensure_dir(enc_parts):
+    """Create each missing level of a directory path. Existing levels are left alone."""
+    for i in range(1, len(enc_parts) + 1):
+        branch = enc_parts[:i]
+        try:
+            listdir(branch)
+            continue                                   # already there
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                raise
+        call("/api/v1/files/" + "/".join(branch) + "/", method="POST", raw=True)
+        print("  mkdir  %s" % urllib.parse.unquote("/".join(branch)))
+
+
+def post_file(enc_parts, local_path):
+    """Multipart-upload one file to Samples/... , replacing any existing copy."""
+    with open(local_path, "rb") as f:
+        blob = f.read()
+    name = os.path.basename(local_path)
+    boundary = "----movesync%s" % os.urandom(12).hex()
+    body = b"".join([
+        ("--%s\r\n" % boundary).encode(),
+        ('Content-Disposition: form-data; name="file"; filename="%s"\r\n' % name).encode(),
+        b"Content-Type: application/octet-stream\r\n\r\n",
+        blob,
+        ("\r\n--%s--\r\n" % boundary).encode(),
+    ])
+    url = "%s/api/v1/files/%s/%s?overwrite=true" % (
+        HOST, "/".join(enc_parts), urllib.parse.quote(name))
+    req = urllib.request.Request(
+        url, data=body, method="POST",
+        headers={"Accept": "application/json, */*",
+                 "Content-Type": "multipart/form-data; boundary=%s" % boundary})
+    with opener.open(req, timeout=600) as r:
+        r.read()
+    return len(blob)
+
+
+def check_bed(local, tempo):
+    """Return (ok, note). --tempo asserts these are beds, so a bad one is a hard skip."""
+    bars = bars_of(local, tempo)
+    if bars is None:
+        return False, "[not a readable WAV]"
+    if abs(bars - round(bars)) > 0.01:
+        return False, "[%.2f bars at %g BPM - would drift]" % (bars, tempo)
+    if round(bars) % 8:
+        return False, "[%d bars - not a multiple of 8]" % round(bars)
+    return True, "[%d bars ok]" % round(bars)
+
+
+def push(files, song=None, tempo=None, force=False):
+    parts = ["Samples", "Bisonte"] + ([urllib.parse.quote(song)] if song else [])
+    ensure_dir(parts)
+    skipped = 0
+    for local in files:
+        if not os.path.isfile(local):
+            print("  skip   %s (not a file)" % local)
+            continue
+        note = ""
+        if tempo:
+            ok, note = check_bed(local, tempo)
+            note = "  " + note
+            if not ok and not force:
+                print("  SKIP   %-28s %s" % (os.path.basename(local), note.strip()))
+                skipped += 1
+                continue
+        try:
+            n = post_file(parts, local)
+        except urllib.error.HTTPError as e:
+            if e.code in (403, 405, 409, 500, 503):
+                sys.exit("Upload refused (HTTP %d). Is Move in Control Live mode? "
+                         "Switch it to Standalone and retry." % e.code)
+            raise
+        print("  put    %-28s %9d bytes%s" % (os.path.basename(local), n, note))
+    print("\n-> Samples/Bisonte%s/" % ("/" + song if song else ""))
+    if skipped:
+        sys.exit("\n%d file(s) skipped as unusable beds. Re-render at exactly 8 bars "
+                 "with render tail 0, or pass --force to upload anyway." % skipped)
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "sets"
 
@@ -117,5 +212,19 @@ if __name__ == "__main__":
     elif cmd == "pull":
         bucket = urllib.parse.quote(sys.argv[2]) if len(sys.argv) > 2 else "Samples"
         pull([bucket], os.path.join(HERE, urllib.parse.unquote(bucket)))
+    elif cmd == "push":
+        args, tempo, force = sys.argv[2:], None, False
+        if "--force" in args:
+            force = True
+            args.remove("--force")
+        if "--tempo" in args:
+            i = args.index("--tempo")
+            tempo = float(args[i + 1])
+            del args[i:i + 2]
+        files = [a for a in args if os.path.isfile(a)]
+        rest = [a for a in args if a not in files]
+        if not files:
+            sys.exit('usage: move-sync.py push <file...> ["<Song>"] [--tempo 124] [--force]')
+        push(files, rest[0] if rest else None, tempo, force)
     else:
         sys.exit(__doc__)

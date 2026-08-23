@@ -12,7 +12,7 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `Layer Stack Method.html` | Overdub method — one part at a time, played against a rendered bed |
 | `Song Template.html` | The default song shape — 104-bar form, layer participation grid, folder skeleton |
 | `SETUP.md` | Machine setup: paths, LOM/Max notes, Move Manager API reference |
-| `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull` (`push` pending) |
+| `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull`, `push` |
 | `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |
 | `tools/lomctl.js` | Max for Live device logic — the generative commands |
 | `tools/LOM Console.amxd` | The device shell; logic lives in `lomctl.js` |
@@ -58,10 +58,24 @@ Creates `<Song> Project/` under `/Volumes/Bisonte/Music Project/Bisonte/` with
 104-bar form and a per-layer tracking log. Override the root with
 `BISONTE_PROJECTS`.
 
-## Backlog
+## Pushing beds
 
-`move-sync.py push` — upload beds to `Samples/Bisonte/<Song>/`. Blocks the
-layer loop; everything else in that loop is already automated.
+```bash
+cd "<Song> Project"
+python3 ~/Music/Ableton/"Move Sets"/move-sync.py push Beds/bed_v03.wav "Bisonte Club 2" --tempo 124
+```
+
+Creates `Samples/Bisonte/<Song>/` on Move if missing and uploads with
+`?overwrite=true`. Move must be in **Standalone** mode — uploads are refused in
+Control Live, and the script says so rather than failing obscurely.
+
+Passing `--tempo` asserts the files are beds: anything that isn't a whole
+multiple of 8 bars at that tempo is refused, because a bed that is a few
+milliseconds off drifts audibly by bar 8 and every part played against it
+inherits the error. `--force` overrides. Without `--tempo` no check runs, so
+one-shots and loops of any length push fine.
+
+## Backlog
 
 `lomctl.js` — `seed`, `euclid`, `mutate`, `markov`, then `graph`, `arrange`,
 `density`. All ES5, all seeded, command + args + seed written into every
