@@ -97,7 +97,7 @@ footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);paddin
 <header class="hero">
   <div class="eyebrow">Music Experiment · Bisonte</div>
   <h1>Worked Example</h1>
-  <p>One song end to end — <b>Bisonte Club 2</b>, 124 BPM, F minor — as six sessions of about an hour. Commands are real and tested; the musical choices are illustrative, there to show <em>where</em> a decision belongs rather than what to decide.</p>
+  <p>One song end to end — <b>Bisonte Club 2</b>, 124 BPM, F minor — as six sessions of about an hour. A plan, not a report: <b>none of it has been run against a real Move</b>. Local commands are tested; the musical choices are illustrative, there to show <em>where</em> a decision belongs rather than what to decide.</p>
   <div class="meta">
     <div><b>Six sessions</b> ≈ 5h30 total</div>
     <div><b>Six parts</b> L1–L6</div>
@@ -339,8 +339,14 @@ Renders/seeds/   drums_8bar.wav, bass_stab.wav,
     </table>
   </div>
   <div class="callout bad">
-    <div class="eyebrow">One step not yet verified on hardware</div>
-    <p>Loading <code>bed_v01.wav</code> from <code>Samples/</code> onto a Move track and looping it is the hinge this whole method turns on, and it has not been done once yet. Prove it in session 2 before building four sessions on top of it — if Move won't loop an 8-bar sample cleanly on a track, the bed has to arrive some other way and the loop changes shape.</p>
+    <div class="eyebrow">Nothing here has touched the hardware</div>
+    <p>No part of this walkthrough has been run against a real Move. What <em>is</em> tested: <code>new-song.sh</code>, and <code>move-sync.py push</code> against a <b>mock HTTP server</b> — which proves the multipart body and URL encoding are well-formed, and proves nothing about whether Move accepts them. Everything else about Move's behaviour is taken from the Field Guide, not from observation.</p>
+    <p>Two things to prove before trusting the shape of this:</p>
+    <ul style="font-size:.9rem">
+      <li><b>Does <code>push</code> work against the real device?</b> One bed, one command. If the endpoint or the multipart format differs from the reverse-engineered notes, session 1 stops there.</li>
+      <li><b>Will Move loop an 8-bar sample cleanly on a track?</b> This is the hinge the method turns on. If it won't, the bed has to arrive some other way and the whole loop changes shape.</li>
+    </ul>
+    <p style="font-size:.9rem">Fifteen minutes with Move on the network settles both, and it is worth doing before session 1 rather than discovering it in session 2.</p>
   </div>
 </section>
 
