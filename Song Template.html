@@ -227,9 +227,9 @@ footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);paddin
         └── <span class="d">seeds/</span>               <span class="c">loops + one-shots pushed back to Move</span>
 </div>
   <p>Two folders are new relative to the old playbook layout. <b>Beds/</b> holds the headphone mixes, one per layer committed. <b>Parts/</b> holds the bundles as pulled — the last state Move and Live share, and the thing to go back to when a part needs re-tracking.</p>
-  <div class="callout bad">
-    <div class="eyebrow">Path correction</div>
-    <p>The Move to Live Playbook says projects live in <code>/Volumes/Bisonte/Bisonte/</code>. That path does not exist — the real one is <code>/Volumes/Bisonte/Music Project/Bisonte/</code>. Worth fixing there.</p>
+  <div class="callout ok">
+    <div class="eyebrow">Scaffolded, not hand-made</div>
+    <p><code>new-song.sh</code> creates this exact skeleton every time, so no song is missing a folder and none of them drift apart. Override the root with <code>BISONTE_PROJECTS</code> if projects ever move.</p>
   </div>
 </section>
 

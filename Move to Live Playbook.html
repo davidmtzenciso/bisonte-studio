@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Move to Live Playbook</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{
   --bg:#f2f4f5; --panel:#ffffff; --panel2:#e9edef; --ink:#151a1e; --ink2:#4b565e; --ink3:#7b868d;
@@ -124,7 +123,7 @@ footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);paddin
   <h1>Move to Live Playbook</h1>
   <p style="color:var(--ink2)">A working method for beat‑driven electronic music: sketch on Move away from the screen, commit to Live, then let scripts propose variations and structure we curate by ear. Audio flows back to Move; Sets never do.</p>
   <div class="meta">
-    <span>Start on <b>Move</b></span><span>Finish in <b>Live 12.3.2</b></span><span>Scripts as <b>generative partner</b></span><span>Plan v1 · <b>2026‑08‑21</b></span>
+    <span>Start on <b>Move</b></span><span>Finish in <b>Live 12.3.5</b></span><span>Scripts as <b>generative partner</b></span><span>Plan v2 · <b>2026‑08‑22</b></span>
   </div>
   <div class="thesis" id="thesis">
     <div class="role"><span class="chip move">Move</span><b>Sketchpad</b><span>Four tracks, pads, sampling, no mouse. Its limits are the point: groove and sound choice get decided fast, away from options.</span></div>
@@ -170,7 +169,7 @@ footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);paddin
           <h4>Folders & rituals</h4>
           <ul style="font-size:.9rem">
             <li><code>~/Music/Ableton/Move Sets/</code> stays the inbox; add <code>archive/&lt;date&gt;/</code> snapshots before each sync.</li>
-            <li>Projects in <code>/Volumes/Bisonte/Bisonte/&lt;Song&gt; Project/</code>.</li>
+            <li>Projects in <code>/Volumes/Bisonte/Music Project/Bisonte/&lt;Song&gt; Project/</code>, scaffolded by <code>new-song.sh</code>.</li>
             <li>Cookie valid? <code>python3 move-sync.py list</code> answers in one call.</li>
             <li>Optional: <code>git</code> in the projects folder with <code>.als</code> diffed through <code>gunzip -c</code> (see Files).</li>
           </ul>
@@ -199,7 +198,7 @@ footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);paddin
           <ul style="font-size:.9rem">
             <li>Sample with the built‑in mic; resample your own loops into new tracks to escape the four‑track ceiling.</li>
             <li>Name the Set on Move before syncing — that name becomes the bundle name and the project name.</li>
-            <li>Several small Sets beat one big one: each sync is one candidate track.</li>
+            <li>Several small Sets beat one big one: each sync is <b>one part of one track</b> — see the Layer Stack Method.</li>
             <li>Stay in <b>Standalone Mode</b>; nothing in this phase needs the computer.</li>
           </ul>
         </div>
@@ -221,7 +220,7 @@ mkdir -p archive/$(date +%F) && cp *.ablbundle archive/$(date +%F)/ 2>/dev/null
 for b in *.ablbundle; do unzip -l "$b" | grep -q Song.abl && echo "ok  $b" || echo "BAD $b"; done
 
 <span class="c"># 3. open in Live (double-click), then File → Save Live Set As…</span>
-<span class="c">#    → /Volumes/Bisonte/Bisonte/&lt;Song&gt; Project/&lt;Song&gt; v01.als   ← the commit</span></code></pre>
+<span class="c">#    → /Volumes/Bisonte/Music Project/Bisonte/&lt;Song&gt; Project/&lt;Song&gt; v01.als   ← the commit</span></code></pre>
       <div class="callout bad">
         <div class="eyebrow">Before Save As</div>
         <p>If the idea might keep living on Move, <b>duplicate the Set on Move first</b>. After the <code>.als</code> exists, the hardware version and the Live version are separate lineages. Treat the bundle in <code>archive/</code> as the last common ancestor.</p>
@@ -299,10 +298,13 @@ Break  → 4 bars, no kick</code></pre>
     <div class="num">6</div>
     <div class="body">
       <h3>Feed Move <span class="chip move">Move</span><span class="chip script">Scripts</span></h3>
-      <p>Close the loop: upload the rendered loops and one‑shots into Move's <code>Samples/</code> so the next sketch starts from this track's DNA. A <code>push</code> subcommand for <code>move-sync.py</code> is the first tooling task (see Sprints).</p>
-      <pre><code><span class="c"># shape of the call move-sync.py push will make (cookie from .move-cookies.txt)</span>
-POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/       <span class="c"># mkdir</span>
-POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/&lt;name&gt;.wav?overwrite=true   <span class="c"># multipart upload</span></code></pre>
+      <p>Close the loop: upload the rendered loops and one‑shots into Move's <code>Samples/</code> so the next sketch starts from this track's DNA. Under the layer method this runs once per part, not once per song — the bed is the thing being pushed.</p>
+      <pre><code><span class="c"># built. creates the folders, uploads with ?overwrite=true</span>
+python3 move-sync.py push Beds/bed_v03.wav <span class="h">"Bisonte Club 2"</span> --tempo 124
+
+<span class="c"># --tempo asserts these are beds: anything that isn't a whole multiple</span>
+<span class="c"># of 8 bars is refused, because a bed that drifts poisons every part</span>
+<span class="c"># played against it. --force overrides. Without --tempo, no check.</span></code></pre>
       <p style="font-size:.88rem;color:var(--ink2)">Uploads are refused while Move is in Control Live mode — this phase runs in Standalone over Wi‑Fi, after the USB jam is over.</p>
     </div>
   </div>
@@ -349,7 +351,7 @@ POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/&lt;name&gt;.wav?overwrite=true 
     <div class="rule"><span class="mono">audio cycles, sets don't</span><span>Anything we want back on Move goes as WAV into <code>Samples/</code>.</span></div>
     <div class="rule"><span class="mono">generated ⇒ seeded ∧ named</span><span>No anonymous clips. If it can't be regenerated it gets played by hand instead.</span></div>
     <div class="rule"><span class="mono">cookie age &lt; 30 d</span><span>Otherwise the script re‑pairs: read the code off Move, type it. Budget a minute for it at the start of a session.</span></div>
-    <div class="rule"><span class="mono">one Set = one candidate</span><span>We don't merge Sets on Move. Combining ideas happens in Live, where tracks can be dragged between projects.</span></div>
+    <div class="rule"><span class="mono">one Set = one part</span><span>We don't merge Sets on Move. Each Set is one layer of one song, played against a bed; combining happens in Live, where tracks can be dragged between projects.</span></div>
   </div>
 </section>
 
@@ -363,10 +365,13 @@ POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/&lt;name&gt;.wav?overwrite=true 
 ├── &lt;Name&gt;.ablbundle              <span class="c">latest pull</span>
 └── archive/2026-08-21/…          <span class="c">snapshots, never edited</span>
 
-/Volumes/Bisonte/Bisonte/
+/Volumes/Bisonte/Music Project/Bisonte/
 └── &lt;Name&gt; Project/
     ├── &lt;Name&gt; v01.als            <span class="c">the commit</span>
     ├── &lt;Name&gt; v02.als …
+    ├── SONG.md                   <span class="c">tempo, key, form, tracking log</span>
+    ├── Beds/                     <span class="c">bed_vNN.wav — 8 bars each</span>
+    ├── Parts/                    <span class="c">layer bundles from Move</span>
     ├── Samples/                  <span class="c">Live‑managed</span>
     └── Renders/
         ├── master/ · stems/
@@ -381,7 +386,7 @@ POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/&lt;name&gt;.wav?overwrite=true 
         <li>Scenes: <code>A · B · A' · Break · B'</code> — the same symbols the grammar uses.</li>
       </ul>
       <h4 style="margin-top:.5rem">Optional: readable .als history</h4>
-      <pre><code><span class="c"># once, in /Volumes/Bisonte/Bisonte</span>
+      <pre><code><span class="c"># once, in /Volumes/Bisonte/Music Project/Bisonte</span>
 git init
 echo '*.als diff=als' &gt; .gitattributes
 echo 'Samples/' &gt;&gt; .gitignore
@@ -396,11 +401,11 @@ git config diff.als.textconv 'gunzip -c'
   <p>Each sprint ends with music, not only tooling. Dates are targets, not promises.</p></div>
   <div class="sprints">
     <div class="sprint"><span class="eyebrow">Sprint 1 · to Aug 28</span><span class="goal">The ritual works end to end</span>
-      <ul><li>Bisonte Template.als in the User Library</li><li>Archive + sync + commit done on three fresh Move sketches</li><li><code>seed</code> and <code>euclid</code> in lomctl.js</li></ul></div>
+      <ul><li><b>done</b> — <code>move-sync.py push</code> with bed verification</li><li><b>done</b> — <code>new-song.sh</code> + Song Template</li><li>Bisonte Template.als in the User Library</li><li>L1 and L2 tracked on one song, bed round‑trip proven</li></ul></div>
     <div class="sprint"><span class="eyebrow">Sprint 2 · to Sep 4</span><span class="goal">Variations you'd actually keep</span>
-      <ul><li><code>mutate</code> and <code>markov</code>, tested on the BNYX demos</li><li>One sketch taken to a rough 3‑minute arrangement by hand</li></ul></div>
+      <ul><li><code>seed</code> then <code>euclid</code> — <code>mutate</code> and <code>markov</code> both need deterministic randomness first</li><li>Tested on the BNYX demos</li><li>One song taken to a full 104‑bar arrangement by hand</li></ul></div>
     <div class="sprint"><span class="eyebrow">Sprint 3 · to Sep 11</span><span class="goal">Structure from the scripts</span>
-      <ul><li><code>graph</code> and <code>arrange</code>; compare a grammar arrangement with a USB jam of the same scenes</li><li><code>move-sync.py push</code> uploading renders to <code>Samples/Bisonte/</code></li></ul></div>
+      <ul><li><code>mutate</code> and <code>markov</code></li><li><code>graph</code> and <code>arrange</code> over the Song Template's seven sections</li><li>Compare a grammar arrangement with a USB jam of the same scenes</li></ul></div>
     <div class="sprint"><span class="eyebrow">Sprint 4 · to Sep 18</span><span class="goal">First finished track</span>
       <ul><li>Mix, render, version, archive</li><li>Second loop started on Move from the first track's seeds</li><li>Retro: what the scripts proposed that we kept — adjust the backlog</li></ul></div>
   </div>
@@ -410,13 +415,13 @@ git config diff.als.textconv 'gunzip -c'
   <div class="sechead"><div class="eyebrow">To decide</div><h2>Open questions</h2></div>
   <ul>
     <li><b>Link over Wi‑Fi for tempo</b> while sketching next to Live — not covered by the README; test whether it coexists with Move Manager before relying on it.</li>
-    <li><b>Max MIDI Tools vs LOM Console</b> for per‑clip generators: Live 12 lets Max for Live devices act as Generators/Transformers in the clip editor. Worth it once <code>euclid</code>/<code>mutate</code> prove themselves, so they live where Live's own tools do.</li>
+    <li><b>Max MIDI Tools vs LOM Console</b> for per‑clip generators: now testable rather than theoretical — <b>Generators by Iftah</b> and <b>MIDI Tools by Philip Meyer</b> are installed and act as Generators/Transformers in the clip editor. Try them before writing <code>euclid</code>; build only what they can't do (cross‑clip, batch, seeded, set‑level).</li>
     <li><b>Where the "energy" of a scene comes from</b> for <code>graph</code>: note density and velocity alone, or also device parameters (filter cutoff, send levels)?</li>
     <li><b>Tempo and key</b> per project or per session: a house default (e.g. 124 BPM) speeds up sketching but narrows the output.</li>
   </ul>
 </section>
 
-<footer>Companion to the <a href="https://claude.ai/code/artifact/8bb7e450-6f00-403e-8a4a-58bb533f4a91">Move Field Guide</a>. Constraints come from the Bisonte README (2026‑08‑20); revise both when Move firmware or Live changes them.</footer>
+<footer>Companion to the <a href="https://claude.ai/code/artifact/8bb7e450-6f00-403e-8a4a-58bb533f4a91">Move Field Guide</a>, the <a href="https://claude.ai/code/artifact/7acb0399-98d4-4680-8937-8289bb922128">Layer Stack Method</a> (how a song is played, one part at a time) and the <a href="https://claude.ai/code/artifact/563067c5-dd92-457e-bc52-ea85b69e235a">Song Template</a> (the default 104‑bar form and folder skeleton). Constraints come from the Bisonte README (2026‑08‑20); revise both when Move firmware or Live changes them.</footer>
 </main>
 </div>
 </body>
