@@ -1,0 +1,449 @@
+<title>Layer Stack Method</title>
+<style>
+:root{
+  --bg:#f2f4f5; --panel:#ffffff; --panel2:#e9edef; --ink:#151a1e; --ink2:#4b565e; --ink3:#7b868d;
+  --line:#d5dbdf; --accent:#e0631f; --accent-ink:#9a3f0c; --accent-soft:#fbe9dd;
+  --ok:#2f8f5b; --ok-soft:#e3f2e9; --warn:#c98a12; --bad:#c43b2c; --bad-soft:#fae4e1;
+  --code-bg:#1b2126; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#8a959c;
+  --l1:#c4553c; --l2:#c08a2e; --l3:#3f8f63; --l4:#3d7ba8; --l5:#7a5f9e; --l6:#a8517a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+    --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+    --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f; --bad-soft:#3a1c18;
+    --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+    --l1:#e0765a; --l2:#e0a63a; --l3:#5cb684; --l4:#5d9dcb; --l5:#a081c4; --l6:#cd7aa0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+  --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+  --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f; --bad-soft:#3a1c18;
+  --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+  --l1:#e0765a; --l2:#e0a63a; --l3:#5cb684; --l4:#5d9dcb; --l5:#a081c4; --l6:#cd7aa0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--accent-ink)}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+code{background:var(--panel2);padding:.1em .35em;border-radius:3px;font-size:.9em}
+pre{background:var(--code-bg);color:var(--code-ink);padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.84rem;line-height:1.6;margin:0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .c{color:var(--code-c)} pre .h{color:var(--code-hi)}
+h1,h2,h3,h4{font-family:"Archivo",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.05rem;font-weight:700}
+h4{font-size:.95rem;font-weight:700}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:1.1rem;max-width:68ch} li{margin:.2rem 0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.wrap{max-width:1180px;margin:0 auto;padding:2.5rem 1.5rem 5rem;display:grid;grid-template-columns:200px minmax(0,1fr);gap:3rem}
+nav{position:sticky;top:1.5rem;align-self:start;display:flex;flex-direction:column;gap:.35rem;font-size:.88rem}
+nav a{color:var(--ink2);text-decoration:none;padding:.25rem .5rem;border-left:2px solid var(--line)}
+nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{display:flex;flex-direction:column;gap:3.5rem}
+header.hero{padding-bottom:2rem;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:1rem}
+.hero .meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;color:var(--ink2)}
+.hero .meta b{color:var(--ink);font-weight:600}
+section{display:flex;flex-direction:column;gap:1.25rem}
+.sechead{display:flex;flex-direction:column;gap:.35rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.4rem;display:flex;flex-direction:column;gap:.8rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+.chip.move{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.chip.live{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+kbd{font-family:"IBM Plex Mono",monospace;font-size:.82em;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .4em;background:var(--panel2)}
+.callout{border-left:3px solid var(--warn);background:var(--panel);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:.3rem}
+.callout.bad{border-left-color:var(--bad)} .callout.ok{border-left-color:var(--ok)}
+.callout .eyebrow{color:inherit}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+th,td{text-align:left;padding:.6rem .9rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-weight:500;background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+/* the layer stack — the spine of the method */
+.stack{display:flex;flex-direction:column-reverse;gap:.4rem}
+.layer{display:grid;grid-template-columns:2.6rem minmax(0,1fr);gap:.9rem;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--lc,var(--line));border-radius:6px;padding:.85rem 1rem}
+.layer .id{font-family:"IBM Plex Mono",monospace;font-size:.9rem;font-weight:600;color:var(--lc,var(--ink2))}
+.layer .body{display:flex;flex-direction:column;gap:.3rem;min-width:0}
+.layer .name{font-family:"Archivo",sans-serif;font-weight:700;font-size:1rem;display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap}
+.layer .name span{font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+.layer .det{font-size:.87rem;color:var(--ink2)}
+.layer .kit{font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink3)}
+.stacknote{font-size:.85rem;color:var(--ink3);display:flex;align-items:center;gap:.5rem}
+/* per-layer loop */
+.loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:.6rem}
+.loop .node{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.75rem .9rem;font-size:.84rem;display:flex;flex-direction:column;gap:.25rem;position:relative}
+.loop .node .eyebrow{font-size:.63rem}
+.loop .node.mv{border-top:3px solid var(--accent)} .loop .node.lv{border-top:3px solid var(--ok)}
+.loop .node::after{content:"→";position:absolute;right:-.8rem;top:50%;transform:translateY(-50%);color:var(--ink3)}
+.loop .node:last-child::after{content:""}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:baseline;font-size:.92rem}
+.rule .mono{color:var(--accent-ink);font-size:.85rem;white-space:nowrap}
+.phase{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:1.2rem;border-top:1px solid var(--line);padding-top:1.5rem}
+.phase .num{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);line-height:1;letter-spacing:-.03em}
+.phase .pbody{display:flex;flex-direction:column;gap:.9rem}
+.phase h3{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:.6rem}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:1.6rem 1fr;gap:.6rem;align-items:start}
+ol.steps li::before{content:counter(s);font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--accent-ink);background:var(--accent-soft);border-radius:4px;text-align:center;line-height:1.6rem;height:1.6rem}
+footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);padding-top:1.5rem}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr;gap:1.5rem}
+  nav{position:static;flex-direction:row;flex-wrap:wrap}
+  nav a{border-left:0;border-bottom:2px solid var(--line)}
+  .loop .node::after{content:""}
+  .phase{grid-template-columns:1fr;gap:.5rem}
+}
+</style>
+
+<div class="wrap">
+<nav>
+  <a href="#idea">The idea</a>
+  <a href="#stack">The band</a>
+  <a href="#band">Band logic</a>
+  <a href="#loop">Layer loop</a>
+  <a href="#bed">The bed</a>
+  <a href="#invariants">Invariants</a>
+  <a href="#gap">Tooling gap</a>
+  <a href="#sessions">First song</a>
+  <a href="#risks">Risks</a>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="eyebrow">Music Experiment · Bisonte</div>
+  <h1>Layer Stack Method</h1>
+  <p>Playing one part at a time on Move and stacking them in Live — a band of one, overdubbed. Each part is its own Move Set, played against a rendered bed of everything already recorded, so nothing is ever written in silence.</p>
+  <div class="meta">
+    <div><b>Move</b> 4 tracks · fw 2.0.5</div>
+    <div><b>Live</b> 12.3.5 Suite</div>
+    <div><b>Available</b> 25 Packs · 549 plugins</div>
+    <div><b>Plan v1</b> 2026-08-22</div>
+  </div>
+</header>
+
+<section id="idea">
+  <div class="sechead">
+    <div class="eyebrow">Why this shape</div>
+    <h2>Overdubbing, one player at a time</h2>
+  </div>
+  <p>Playing one instrument line at a time is not a limitation to work around — it is how records get made. A session tracks the drummer, then the bassist plays to the drums, then the keys play to both. Each musician hears everything already recorded in their headphones and plays <em>to</em> it. You are doing the same thing, playing every chair yourself.</p>
+  <p>Which makes one thing non-negotiable: the headphone mix. Here that is <b>the bed</b> — a rendered loop of every part already committed, sitting on Move's track 1. Tracks 2–4 are the part you are playing today. The four-track ceiling stops being a limit and becomes the session rule: you always hear the band, you can only add one player at a time.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="chip move">Move</span> what a part Set holds</h3>
+      <ul>
+        <li><b>Track 1</b> — the bed. 8 bars from Live. Your headphone mix. Never edited, never synced back.</li>
+        <li><b>Tracks 2–4</b> — today's player. Three tracks covers kick/snare/hats, or bass plus its octave double, or a chord part and its counter-line.</li>
+      </ul>
+      <p class="det" style="font-size:.87rem;color:var(--ink2)">If one player needs more than three tracks, they are two players.</p>
+    </div>
+    <div class="card">
+      <h3><span class="chip live">Live</span> what a part becomes</h3>
+      <ul>
+        <li>One group track per player, named <code>L3 RHYTHM</code>.</li>
+        <li>One instrument inside it — the player's instrument. That is what makes them swappable later without touching the performance.</li>
+        <li>The bed track is deleted on import. It was the headphone feed, not the record.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">
+    <div class="eyebrow">Amends the playbook</div>
+    <p>The Move to Live Playbook says <em>one Set = one candidate track</em>. Under this method that becomes <b>one Set = one layer of one track</b>. Worth changing there so the two documents agree.</p>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="sechead">
+    <div class="eyebrow">Tracking order · bottom up</div>
+    <h2>The band</h2>
+  </div>
+  <p>Six chairs, tracked in the order a session would track them. Each player hears everyone below and nobody above, so the order is a dependency chain rather than a preference. Read from the bottom.</p>
+  <div class="stack">
+    <div class="layer" style="--lc:var(--l6)">
+      <div class="id">L6</div>
+      <div class="body">
+        <div class="name">The producer <span>fills · risers · noise</span></div>
+        <div class="det">Not a player — the person at the desk. Transitions, reversed tails, one-shot accents. Comes last because it reacts to the arrangement, not the groove.</div>
+        <div class="kit">Build and Drop · Chop and Swing · Lost and Found · Airwindows</div>
+      </div>
+    </div>
+    <div class="layer" style="--lc:var(--l5)">
+      <div class="id">L5</div>
+      <div class="body">
+        <div class="name">Atmosphere <span>pads · drones · air</span></div>
+        <div class="det">The fifth member nobody credits. Makes four dry parts sound like one room. Usually resampled from L1–L4 rather than played.</div>
+        <div class="kit">Drone Lab · Granulator III · Inspired by Nature · Cardinal</div>
+      </div>
+    </div>
+    <div class="layer" style="--lc:var(--l4)">
+      <div class="id">L4</div>
+      <div class="body">
+        <div class="name">The lead <span>hook · topline · soloist</span></div>
+        <div class="det">The part someone hums. Needs L1–L3 in the phones or it lands in a register that fights the chords. Should rest more than it plays.</div>
+        <div class="kit">Surge XT · Odin 2 · Move Wavetable · TAL-NoiseMaker</div>
+      </div>
+    </div>
+    <div class="layer" style="--lc:var(--l3)">
+      <div class="id">L3</div>
+      <div class="body">
+        <div class="name">Rhythm <span>chords · comping · stabs</span></div>
+        <div class="det">The guitarist or keys player. Fixes the key for everyone above, fills the space between bass and lead. Play against bass, never against drums alone.</div>
+        <div class="kit">Electric Keyboards · Expressive Chords · Move Melodic Sampler</div>
+      </div>
+    </div>
+    <div class="layer" style="--lc:var(--l2)">
+      <div class="id">L2</div>
+      <div class="body">
+        <div class="name">The bassist <span>low end</span></div>
+        <div class="det">Tracked second because kick and bass are one decision, not two. Locks to the kick or deliberately plays around it — decide which before you record.</div>
+        <div class="kit">Guitar and Bass · Surge XT · Move Drift</div>
+      </div>
+    </div>
+    <div class="layer" style="--lc:var(--l1)">
+      <div class="id">L1</div>
+      <div class="body">
+        <div class="name">The drummer <span>kit · perc · groove</span></div>
+        <div class="det">Sets tempo, key and feel for everyone else. The only chair tracked with no bed — it <em>is</em> the first bed. One Drum Rack in Live counts as one instrument.</div>
+        <div class="kit">Drum Booth · Beat Tools · Drum Essentials · Golden Era Hip-Hop Drums · Latin Percussion</div>
+      </div>
+    </div>
+  </div>
+  <div class="stacknote"><span class="chip">note</span> Six chairs is a target, not a quota. Most tracks resolve at four; plenty of great records are drums, bass and one melodic part.</div>
+</section>
+
+<section id="band">
+  <div class="sechead">
+    <div class="eyebrow">What playing alone costs you</div>
+    <h2>Band logic</h2>
+  </div>
+  <p>A real band self-regulates by ear: nobody plays over the singer, the bassist hears the kick, everyone stops in the breakdown. Overdubbing alone removes all of that, because when you record a part by itself you naturally fill the space. These are the rules to apply deliberately in its place.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Everybody rests</h3>
+      <p style="font-size:.9rem">The single biggest tell of a one-person overdub: every part plays all the time, because each was recorded alone with room to fill.</p>
+      <p style="font-size:.9rem"><b>The rule:</b> after recording a part, delete roughly a quarter of it. Take out the bars where it was only playing because it could. Space is what makes the parts sound like people.</p>
+    </div>
+    <div class="card">
+      <h3>One owner per lane</h3>
+      <p style="font-size:.9rem">Two players in the same frequency lane sound like mud, not thickness. Assign the register before you play the part, not at mix time.</p>
+      <div class="tablewrap" style="margin-top:.2rem">
+        <table>
+          <tbody>
+            <tr><td><b>L2</b> bass</td><td><code>40–250 Hz</code></td></tr>
+            <tr><td><b>L3</b> rhythm</td><td><code>250 Hz–2 kHz</code></td></tr>
+            <tr><td><b>L4</b> lead</td><td><code>1–5 kHz</code></td></tr>
+            <tr><td><b>L5</b> atmosphere</td><td><code>the gaps</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Call and response</h3>
+      <p style="font-size:.9rem">Parts should answer each other, not talk simultaneously. When the lead plays, the rhythm part thins out; when the lead rests, the rhythm fills.</p>
+      <p style="font-size:.9rem"><b>Practically:</b> while tracking L4, listen for where L3 is busy — and play in the holes. This is easy to hear against the bed and impossible to hear in isolation.</p>
+    </div>
+    <div class="card">
+      <h3>The rhythm section is one decision</h3>
+      <p style="font-size:.9rem">Drums and bass are not two independent parts. Decide their relationship explicitly before tracking L2: bass locks to the kick, or bass deliberately plays around it.</p>
+      <p style="font-size:.9rem">If you cannot say which, the low end will fight itself no matter how you EQ it later.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="eyebrow">Take discipline</div>
+    <p>Play each part three times rather than programming it once. Keep the take with the best feel even if it has flaws, and quantize only the notes that actively fight the grid. Timing imperfection is most of what makes overdubs sound like a band rather than a sequencer — and it is the thing you cannot add back later.</p>
+  </div>
+</section>
+
+<section id="loop">
+  <div class="sechead">
+    <div class="eyebrow">Repeat once per player</div>
+    <h2>The layer loop</h2>
+  </div>
+  <div class="loop">
+    <div class="node lv"><div class="eyebrow">1 · Live</div>Render bed 8 bars → <code>Renders/seeds/</code></div>
+    <div class="node"><div class="eyebrow">2 · Wi-Fi</div>Upload to <code>Samples/Bisonte/&lt;Song&gt;/</code></div>
+    <div class="node mv"><div class="eyebrow">3 · Move</div>New Set · bed on track 1 · write layer on 2–4</div>
+    <div class="node"><div class="eyebrow">4 · Wi-Fi</div><code>move-sync.py sets</code></div>
+    <div class="node lv"><div class="eyebrow">5 · Live</div>Drag layer in · delete bed · assign instrument</div>
+    <div class="node lv"><div class="eyebrow">6 · Live</div>Re-render bed at <code>v+1</code></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Naming</h3>
+      <ul>
+        <li>Move Set: <code>Bisonte Club 1 L3 harmony</code> — named <em>on Move</em>, before syncing.</li>
+        <li>Bed: <code>bed_v03.wav</code> — the number is how many layers it contains.</li>
+        <li>Live group: <code>L3 HARMONY</code>.</li>
+      </ul>
+      <p style="font-size:.87rem;color:var(--ink2)">The bundle name becomes the project name, so getting it right on Move saves a rename later.</p>
+    </div>
+    <div class="card">
+      <h3>Where the generators go</h3>
+      <p style="font-size:.9rem">Variations happen in Live <b>after</b> commit, never on Move — Move is for playing, Live is for permuting.</p>
+      <ul>
+        <li><code>euclid 5 16 2</code> on L1 hats</li>
+        <li><code>markov 2 8</code> on L2 bass</li>
+        <li><code>mutate .15</code> for L4 variants</li>
+      </ul>
+      <p style="font-size:.87rem;color:var(--ink2)">You now have <b>Generators by Iftah</b> and <b>MIDI Tools by Philip Meyer</b> installed — the built-in comparison the playbook's open question asked for. Try them before building <code>euclid</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="bed">
+  <div class="sechead">
+    <div class="eyebrow">The one technical detail that matters</div>
+    <h2>Rendering the bed</h2>
+  </div>
+  <p>Everything in this method rests on the bed loop being exactly right. A bed that is a few milliseconds long will drift audibly by bar 8 on Move, and you will write a part that locks to a moving target.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Setting</th><th>Value</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Length</td><td><code>exactly 8 bars</code></td><td>Loop start on 1.1.1, end on 9.1.1. Not "roughly the loop".</td></tr>
+        <tr><td>Tail</td><td><code>Render Tail: 0 ms</code></td><td>Any tail adds silence and breaks the loop point.</td></tr>
+        <tr><td>Rate</td><td><code>44.1 kHz · 16-bit WAV</code></td><td>Move's native rate. Higher just costs transfer time.</td></tr>
+        <tr><td>Normalize</td><td><code>Off</code></td><td>Bed levels must stay comparable across versions.</td></tr>
+        <tr><td>Tempo on Move</td><td><code>identical to project</code></td><td>Set it before recording anything into the Set.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout ok">
+    <div class="eyebrow">Sanity check</div>
+    <p>Drop the finished bed back into Live on a fresh track and loop it four times against the original. If it stays locked for 32 bars, it is correct.</p>
+  </div>
+</section>
+
+<section id="invariants">
+  <div class="sechead">
+    <div class="eyebrow">Things that are always true</div>
+    <h2>Invariants</h2>
+  </div>
+  <div class="card">
+    <div class="rule"><div class="mono">tempo, key fixed at L1</div><div>Decided once, on the foundation Set. Changing tempo later is cheap in Live and impossible on the layer Sets already written.</div></div>
+    <div class="rule"><div class="mono">bed = 8 bars, always</div><div>Same length every version, so any layer Set can be opened against any bed.</div></div>
+    <div class="rule"><div class="mono">one Set = one layer</div><div>Never write two layers into one Set, even when tracks are free. The Set name is the layer's identity.</div></div>
+    <div class="rule"><div class="mono">track 1 is never yours</div><div>It holds the bed. Nothing you compose lives there, so import is always "keep 2–4, drop 1".</div></div>
+    <div class="rule"><div class="mono">audio cycles, Sets don't</div><div>Beds and renders travel Live → Move. Sets only travel Move → Live, once.</div></div>
+    <div class="rule"><div class="mono">Standalone to sync</div><div>Control Live blocks the file API. Uploading a bed while Move is a controller silently fails.</div></div>
+    <div class="rule"><div class="mono">duplicate before committing</div><div>If a layer might keep evolving on the hardware, duplicate the Set on Move before Save As. After that they are separate lineages.</div></div>
+  </div>
+</section>
+
+<section id="gap">
+  <div class="sechead">
+    <div class="eyebrow">Blocking dependency</div>
+    <h2>The tooling gap</h2>
+  </div>
+  <div class="callout bad">
+    <div class="eyebrow">Step 2 has no tool yet</div>
+    <p><code>move-sync.py</code> can <code>list</code>, <code>sets</code> and <code>pull</code> — it cannot <b>push</b>. Uploading each bed currently means opening <code>move.local</code> and dragging by hand, once per layer, once per revision. Across six layers that is the friction that kills the method.</p>
+  </div>
+  <p>The endpoints are already reverse-engineered and the session cookie already exists in <code>.move-cookies.txt</code>. The shape of the call:</p>
+  <pre><code><span class="c"># create the song folder once</span>
+POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/
+
+<span class="c"># upload / replace a bed</span>
+POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/<span class="h">bed_v03.wav</span>?overwrite=true
+     Content-Type: multipart/form-data</code></pre>
+  <p>This is Sprint 3 in the playbook. Under the layer method it is <b>Sprint 1</b> — nothing else in the loop is manual, so this one gap sets the pace of everything.</p>
+</section>
+
+<section id="sessions">
+  <div class="sechead">
+    <div class="eyebrow">Concrete shape</div>
+    <h2>First song, six sessions</h2>
+  </div>
+
+  <div class="phase">
+    <div class="num">0</div>
+    <div class="pbody">
+      <h3>Set up <span class="chip live">Live</span></h3>
+      <ul>
+        <li><code>Bisonte Template.als</code> — UTIL track with LOM Console, returns, REF track, LUFS meter on master.</li>
+        <li>Six empty group tracks, pre-named <code>L1</code>–<code>L6</code>, pre-coloured to match this document.</li>
+        <li><code>Renders/seeds/</code> in the project folder.</li>
+        <li>Write <code>move-sync.py push</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">1</div>
+    <div class="pbody">
+      <h3>L1 the drummer <span class="chip move">Move</span></h3>
+      <p>No bed — the one chair tracked blind. Decide tempo and key here and write them down. Kick pattern with at least one off-grid element. Sync, commit to <code>&lt;Song&gt; v01.als</code>, render <code>bed_v01</code>.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">2</div>
+    <div class="pbody">
+      <h3>L2 the bassist <span class="chip move">Move</span> <span class="chip live">Live</span></h3>
+      <p>Bed on track 1, bass on track 2. Decide the kick relationship before you play — lock or play around. Render <code>bed_v02</code>.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">3</div>
+    <div class="pbody">
+      <h3>L3 rhythm + L4 lead <span class="chip move">Move</span></h3>
+      <p>Two Sets in one session — fast once the bed carries drums and bass. Rhythm first, render <code>bed_v03</code>, then play the lead into its holes.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">4</div>
+    <div class="pbody">
+      <h3>L5 atmosphere + generators <span class="chip live">Live</span></h3>
+      <p>Resample L1–L4 into Granulator III rather than playing something new. First real use of the generative tools: variants per layer, keep at most three, name survivors by function.</p>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">5</div>
+    <div class="pbody">
+      <h3>Arrange, produce, mix <span class="chip live">Live</span></h3>
+      <p>Structure from scenes, ear candy written against the arrangement, mix against REF at matched loudness. Render master, stems, and loops for the next song's L1.</p>
+    </div>
+  </div>
+</section>
+
+<section id="risks">
+  <div class="sechead">
+    <div class="eyebrow">What will go wrong</div>
+    <h2>Known failure modes</h2>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Layer drifts out of time by bar 8</td><td>Bed not exactly 8 bars, or render tail &gt; 0</td><td>Re-render with tail 0; verify by looping ×4 in Live</td></tr>
+        <tr><td>Upload silently refused</td><td>Move is in Control Live mode</td><td>Setup → Standalone before any sync</td></tr>
+        <tr><td>Parts individually good, together muddy</td><td>Layers written against different bed versions</td><td>Always regenerate the bed before the next layer</td></tr>
+        <tr><td>Everything plays all the time</td><td>Each part recorded alone, filling space that was never empty</td><td>Delete a quarter of every part after tracking; make players rest</td></tr>
+        <tr><td>Six thin tracks, no weight</td><td>One instrument per player taken too literally in the mix</td><td>The rule governs <em>playing</em>, not mixing — double and saturate freely in Live</td></tr>
+        <tr><td>Sounds sequenced, not played</td><td>Everything quantized to 100%</td><td>Comp the take with the best feel; quantize only notes that fight the grid</td></tr>
+        <tr><td>Idea died on Move</td><td>Saved as <code>.als</code> without duplicating first</td><td>Duplicate the Set on Move before Save As; the bundle in <code>archive/</code> is the last shared ancestor</td></tr>
+        <tr><td>Key drift in L3/L4</td><td>Move scale not set to the L1 key</td><td>Set key and scale on every layer Set at creation</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout">
+    <div class="eyebrow">The honest risk</div>
+    <p>Layer-at-a-time favours arrangement clarity over performance energy. A track built this way can sound assembled. The counter is Route B from the playbook — once the stack exists, switch Move to <b>Control Live</b> and jam the whole thing in one take over the arrangement, keeping what the hands did.</p>
+  </div>
+</section>
+
+<footer>
+  Companion to the <b>Move Field Guide</b> and the <b>Move to Live Playbook</b>. Instrument assignments reflect the 25 Packs and 549 plugins installed 2026-08-22. Revise when Move firmware, Live, or the band changes.
+</footer>
+</main>
+</div>

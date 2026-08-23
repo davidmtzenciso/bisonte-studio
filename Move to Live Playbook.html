@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Move to Live Playbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f2f4f5; --panel:#ffffff; --panel2:#e9edef; --ink:#151a1e; --ink2:#4b565e; --ink3:#7b868d;
+  --line:#d5dbdf; --accent:#e0631f; --accent-ink:#9a3f0c; --accent-soft:#fbe9dd;
+  --ok:#2f8f5b; --ok-soft:#e3f2e9; --warn:#c98a12; --bad:#c43b2c; --bad-soft:#fae4e1;
+  --code-bg:#1b2126; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#8a959c;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+    --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+    --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f; --bad-soft:#3a1c18;
+    --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+  --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+  --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f; --bad-soft:#3a1c18;
+  --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--accent-ink)}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+code{background:var(--panel2);padding:.1em .35em;border-radius:3px;font-size:.9em}
+pre{background:var(--code-bg);color:var(--code-ink);padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.84rem;line-height:1.6;margin:0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .c{color:var(--code-c)} pre .h{color:var(--code-hi)}
+h1,h2,h3,h4{font-family:"Archivo",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.05rem;font-weight:700}
+h4{font-size:.95rem;font-weight:700}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:1.1rem;max-width:68ch} li{margin:.2rem 0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.wrap{max-width:1180px;margin:0 auto;padding:2.5rem 1.5rem 5rem;display:grid;grid-template-columns:200px minmax(0,1fr);gap:3rem}
+nav{position:sticky;top:1.5rem;align-self:start;display:flex;flex-direction:column;gap:.35rem;font-size:.88rem}
+nav a{color:var(--ink2);text-decoration:none;padding:.25rem .5rem;border-left:2px solid var(--line)}
+nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{display:flex;flex-direction:column;gap:3.5rem}
+header.hero{padding-bottom:2rem;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:1rem}
+.hero .meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;color:var(--ink2)}
+.hero .meta b{color:var(--ink);font-weight:600}
+.thesis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:.5rem}
+.thesis .role{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.3rem}
+.thesis .role b{font-family:"Archivo",sans-serif;font-size:1.05rem}
+.thesis .role span{color:var(--ink2);font-size:.9rem}
+section{display:flex;flex-direction:column;gap:1.25rem}
+.sechead{display:flex;flex-direction:column;gap:.35rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.4rem;display:flex;flex-direction:column;gap:.8rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+.chip.move{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.chip.live{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+.chip.script{border-color:var(--ink3);color:var(--ink2);background:var(--panel2)}
+.chip.usb{border-color:var(--warn);color:var(--warn)}
+kbd{font-family:"IBM Plex Mono",monospace;font-size:.82em;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .4em;background:var(--panel2)}
+.callout{border-left:3px solid var(--warn);background:var(--panel);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:.3rem}
+.callout.bad{border-left-color:var(--bad)} .callout.ok{border-left-color:var(--ok)}
+.callout .eyebrow{color:inherit}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+th,td{text-align:left;padding:.6rem .9rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-weight:500;background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+/* cycle diagram */
+.cycle{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem}
+.cycle .node{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem .9rem;font-size:.85rem;display:flex;flex-direction:column;gap:.25rem;position:relative}
+.cycle .node .eyebrow{font-size:.65rem}
+.cycle .node.commit{border-color:var(--bad);border-style:dashed}
+.cycle .node.move{border-top:3px solid var(--accent)} .cycle .node.live{border-top:3px solid var(--ok)}
+.cycle .node::after{content:"→";position:absolute;right:-.85rem;top:50%;transform:translateY(-50%);color:var(--ink3)}
+.cycle .node:last-child::after{content:""}
+.backedge{display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--ink2);padding:.5rem .9rem;border:1px dashed var(--line);border-radius:8px}
+.backedge b{color:var(--ok)}
+/* phases */
+.phase{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:1.2rem;border-top:1px solid var(--line);padding-top:1.5rem}
+.phase .num{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);line-height:1;letter-spacing:-.03em}
+.phase .body{display:flex;flex-direction:column;gap:.9rem}
+.phase h3{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.checks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.checks li{display:grid;grid-template-columns:1.1rem 1fr;gap:.5rem;align-items:start;font-size:.92rem}
+.checks li::before{content:"";width:.85rem;height:.85rem;border:1.5px solid var(--ink3);border-radius:3px;margin-top:.3rem}
+.twocol{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:baseline;font-size:.92rem}
+.rule .mono{color:var(--accent-ink);font-size:.85rem;white-space:nowrap}
+.status{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .45rem;border-radius:3px}
+.status.have{background:var(--ok-soft);color:var(--ok)} .status.next{background:var(--accent-soft);color:var(--accent-ink)} .status.later{background:var(--panel2);color:var(--ink2)}
+.sprints{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.sprint{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.5rem}
+.sprint .eyebrow{color:var(--accent-ink)}
+.sprint .goal{font-family:"Archivo",sans-serif;font-weight:700}
+.sprint ul{font-size:.88rem;color:var(--ink2)}
+footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);padding-top:1.5rem}
+@media (max-width:820px){.wrap{grid-template-columns:1fr;gap:1.5rem}nav{position:static;flex-direction:row;flex-wrap:wrap}nav a{border-left:0;border-bottom:2px solid var(--line)}.cycle .node::after{content:""}.phase{grid-template-columns:1fr;gap:.5rem}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav aria-label="Sections">
+  <a href="#thesis">Roles</a>
+  <a href="#loop">The loop</a>
+  <a href="#phases">Phases</a>
+  <a href="#partner">Generative partner</a>
+  <a href="#rules">Invariants</a>
+  <a href="#files">Files & naming</a>
+  <a href="#sprints">Sprints</a>
+  <a href="#open">Open questions</a>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="eyebrow">Music Experiment · Bisonte</div>
+  <h1>Move to Live Playbook</h1>
+  <p style="color:var(--ink2)">A working method for beat‑driven electronic music: sketch on Move away from the screen, commit to Live, then let scripts propose variations and structure we curate by ear. Audio flows back to Move; Sets never do.</p>
+  <div class="meta">
+    <span>Start on <b>Move</b></span><span>Finish in <b>Live 12.3.2</b></span><span>Scripts as <b>generative partner</b></span><span>Plan v1 · <b>2026‑08‑21</b></span>
+  </div>
+  <div class="thesis" id="thesis">
+    <div class="role"><span class="chip move">Move</span><b>Sketchpad</b><span>Four tracks, pads, sampling, no mouse. Its limits are the point: groove and sound choice get decided fast, away from options.</span></div>
+    <div class="role"><span class="chip live">Live</span><b>Studio</b><span>Arrangement, sound design, mixing, rendering. Where a loop becomes a track. The terminal format is <code>.als</code>.</span></div>
+    <div class="role"><span class="chip script">Scripts</span><b>Third collaborator</b><span>LOM Console proposes; we dispose. Variations, rhythms, transition graphs, arrangement grammars — seeded so any result can be regenerated.</span></div>
+  </div>
+</header>
+
+<section id="loop">
+  <div class="sechead"><div class="eyebrow">Shape of the work</div><h2>The loop</h2>
+  <p>One pass through the cycle is the unit of work. Sets travel one way; audio closes the loop.</p></div>
+  <div class="cycle">
+    <div class="node move"><span class="eyebrow">1 · Move</span><b>Sketch</b><span style="color:var(--ink2)">loops, sounds, a groove</span></div>
+    <div class="node move"><span class="eyebrow">2 · Wi‑Fi</span><b>Sync</b><span style="color:var(--ink2)"><code>move-sync.py sets</code></span></div>
+    <div class="node commit live"><span class="eyebrow">3 · Live</span><b>Commit</b><span style="color:var(--bad)">Save As .als — one‑way</span></div>
+    <div class="node live"><span class="eyebrow">4 · Scripts</span><b>Mutate</b><span style="color:var(--ink2)">variations, patterns</span></div>
+    <div class="node live"><span class="eyebrow">5 · Live + Move USB</span><b>Arrange</b><span style="color:var(--ink2)">grammar, jam, record</span></div>
+    <div class="node live"><span class="eyebrow">6 · Live</span><b>Mix & render</b><span style="color:var(--ink2)">stems, loops, one‑shots</span></div>
+  </div>
+  <div class="backedge"><b>⟲ back edge</b><span>Rendered loops and one‑shots are uploaded to Move's <code>Samples/</code> bucket and become raw material for the next sketch. The graph is a cycle for audio and a DAG for Sets.</span></div>
+</section>
+
+<section id="phases">
+  <div class="sechead"><div class="eyebrow">Step by step</div><h2>Phases</h2></div>
+
+  <div class="phase">
+    <div class="num">0</div>
+    <div class="body">
+      <h3>Set up once <span class="chip live">Live</span><span class="chip script">Scripts</span></h3>
+      <p>Everything later assumes these exist. Half a session, done once.</p>
+      <div class="twocol">
+        <div class="card">
+          <h4>Bisonte Template.als</h4>
+          <p style="font-size:.92rem">Saved in the User Library so its tracks can be dragged from Live's browser into any set that opened from a bundle.</p>
+          <ul style="font-size:.9rem">
+            <li><b>UTIL</b> — muted audio track holding <b>LOM Console</b>; never carries audio.</li>
+            <li>Return tracks: room reverb, tape delay, parallel drum crush.</li>
+            <li>A <b>REF</b> track for a reference record, routed out of the master chain.</li>
+            <li>Master: limiter off by default, a LUFS meter on.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Folders & rituals</h4>
+          <ul style="font-size:.9rem">
+            <li><code>~/Music/Ableton/Move Sets/</code> stays the inbox; add <code>archive/&lt;date&gt;/</code> snapshots before each sync.</li>
+            <li>Projects in <code>/Volumes/Bisonte/Bisonte/&lt;Song&gt; Project/</code>.</li>
+            <li>Cookie valid? <code>python3 move-sync.py list</code> answers in one call.</li>
+            <li>Optional: <code>git</code> in the projects folder with <code>.als</code> diffed through <code>gunzip -c</code> (see Files).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">1</div>
+    <div class="body">
+      <h3>Sketch on Move <span class="chip move">Move</span></h3>
+      <p>Goal: a Set that already grooves — not a finished idea. Time‑box it; the limits of four tracks do the editing for you.</p>
+      <div class="twocol">
+        <div class="card">
+          <h4>What a sketch must contain</h4>
+          <ul class="checks">
+            <li>Drums with a clear kick pattern and at least one off‑grid element (swing, a late snare, a ghost note).</li>
+            <li>A bass part that leaves room for the kick.</li>
+            <li>One sound that is <em>only</em> this track's: a sampled texture, a resampled pad, a recorded noise.</li>
+            <li>Tempo decided. Changing it after commit is cheap in Live; changing the feel is not.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Habits</h4>
+          <ul style="font-size:.9rem">
+            <li>Sample with the built‑in mic; resample your own loops into new tracks to escape the four‑track ceiling.</li>
+            <li>Name the Set on Move before syncing — that name becomes the bundle name and the project name.</li>
+            <li>Several small Sets beat one big one: each sync is one candidate track.</li>
+            <li>Stay in <b>Standalone Mode</b>; nothing in this phase needs the computer.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">2</div>
+    <div class="body">
+      <h3>Sync and commit <span class="chip move">Move</span><span class="chip live">Live</span></h3>
+      <p>The only phase with a one‑way door in it. Follow the order.</p>
+      <pre><code><span class="c"># 1. snapshot what we already have, then pull</span>
+cd ~/Music/Ableton/Move\ Sets
+mkdir -p archive/$(date +%F) && cp *.ablbundle archive/$(date +%F)/ 2>/dev/null
+<span class="h">python3 move-sync.py sets</span>
+
+<span class="c"># 2. sanity: every bundle is a zip with Song.abl inside</span>
+for b in *.ablbundle; do unzip -l "$b" | grep -q Song.abl && echo "ok  $b" || echo "BAD $b"; done
+
+<span class="c"># 3. open in Live (double-click), then File → Save Live Set As…</span>
+<span class="c">#    → /Volumes/Bisonte/Bisonte/&lt;Song&gt; Project/&lt;Song&gt; v01.als   ← the commit</span></code></pre>
+      <div class="callout bad">
+        <div class="eyebrow">Before Save As</div>
+        <p>If the idea might keep living on Move, <b>duplicate the Set on Move first</b>. After the <code>.als</code> exists, the hardware version and the Live version are separate lineages. Treat the bundle in <code>archive/</code> as the last common ancestor.</p>
+      </div>
+      <ul class="checks">
+        <li>Drag <b>UTIL</b> (with LOM Console) and the return tracks in from <i>Bisonte Template</i> via the browser.</li>
+        <li>Move's devices open natively (Drift, Wavetable, Drum Sampler); check that samples resolved — Live's File Manager reports missing files.</li>
+        <li>Group the four Move tracks as <b>MOVE</b> so the origin stays visible after the set grows.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">3</div>
+    <div class="body">
+      <h3>Mutate with the scripts <span class="chip script">Scripts</span><span class="chip live">Live</span></h3>
+      <p>Select a clip, ask LOM Console for N variations into the empty slots below it, audition them as scenes, keep the two or three that earn their place, delete the rest. Every generated clip is named with its command and seed so it can be regenerated or explained later.</p>
+      <div class="twocol">
+        <div class="card">
+          <h4>Typical round</h4>
+          <ul style="font-size:.9rem">
+            <li><code>euclid 5 16 2</code> on the hat track, then <code>mutate 0.15 7</code> ×4 on the drums.</li>
+            <li><code>markov 2 8 11</code> on the bass clip → eight bars that "sound like" the original.</li>
+            <li>Live 12's own MIDI Tools (Rhythm, Seed, Shape, Velocity Shaper) for per‑clip work — our scripts only do what the built‑ins can't: cross‑clip, batch, seeded, set‑level.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Curate by rule</h4>
+          <ul style="font-size:.9rem">
+            <li>Keep ≤ 3 variants per part. More is a different track.</li>
+            <li>A variant survives only if it is playable back‑to‑back with the original without a fill.</li>
+            <li>Rename survivors by function (<code>hat A</code>, <code>hat A'</code>), not by seed; the seed stays in the clip's annotation.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">4</div>
+    <div class="body">
+      <h3>Arrange <span class="chip live">Live</span><span class="chip usb">Move over USB</span></h3>
+      <p>Two complementary routes. Use both: the grammar gives a skeleton quickly, the jam gives the transitions a human made.</p>
+      <div class="twocol">
+        <div class="card">
+          <h4>Route A — grammar</h4>
+          <p style="font-size:.92rem"><code>arrange</code> expands a phrase‑structure grammar over the scenes and writes clips into the Arrangement with <code>duplicate_clip_to_arrangement</code>. Three candidates, pick one, edit by hand.</p>
+          <pre style="margin-top:.4rem"><code>Song   → Intro Body Outro
+Body   → A A B A' | A B A' Break B'
+Intro  → 8 bars of A with drums muted
+Break  → 4 bars, no kick</code></pre>
+        </div>
+        <div class="card">
+          <h4>Route B — jam</h4>
+          <p style="font-size:.92rem">Switch Move to <b>Control Live</b> (<kbd>Shift</kbd>+<kbd>Step 2</kbd>), USB‑C, enable Arrangement record, launch scenes and play pads for one take. Capture what was good, quantize what was late.</p>
+          <p style="font-size:.88rem;color:var(--ink2)">Sync before you switch: Control Live blocks the file API. Back to Standalone when done.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">5</div>
+    <div class="body">
+      <h3>Mix and render <span class="chip live">Live</span></h3>
+      <ul class="checks">
+        <li>Mix against the REF track at matched loudness; decide the low end first (kick vs bass sidechain or EQ carve).</li>
+        <li>Export the master, plus stems per group, plus <b>loops and one‑shots</b> that could seed the next sketch (8‑bar drum loop, bass stab, texture).</li>
+        <li>Bump the version: <code>&lt;Song&gt; v02.als</code> at every structural change; Live's "Save a Copy" keeps the project folder shared.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="num">6</div>
+    <div class="body">
+      <h3>Feed Move <span class="chip move">Move</span><span class="chip script">Scripts</span></h3>
+      <p>Close the loop: upload the rendered loops and one‑shots into Move's <code>Samples/</code> so the next sketch starts from this track's DNA. A <code>push</code> subcommand for <code>move-sync.py</code> is the first tooling task (see Sprints).</p>
+      <pre><code><span class="c"># shape of the call move-sync.py push will make (cookie from .move-cookies.txt)</span>
+POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/       <span class="c"># mkdir</span>
+POST /api/v1/files/Samples/Bisonte/&lt;Song&gt;/&lt;name&gt;.wav?overwrite=true   <span class="c"># multipart upload</span></code></pre>
+      <p style="font-size:.88rem;color:var(--ink2)">Uploads are refused while Move is in Control Live mode — this phase runs in Standalone over Wi‑Fi, after the USB jam is over.</p>
+    </div>
+  </div>
+</section>
+
+<section id="partner">
+  <div class="sechead"><div class="eyebrow">lomctl.js backlog</div><h2>The generative partner</h2>
+  <p>Commands for LOM Console, in build order. All ES5, all seeded, all operating on the selected clip or track. Each writes its name, arguments and seed into the generated clip's name so nothing is unrepeatable.</p></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Command</th><th>Does</th><th>Algorithm</th><th>LOM calls</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><code>info · tracks · devices · tempo · newclip · watch</code></td><td>Inspect and observe the set</td><td>—</td><td><code>get / set / call / observe</code></td><td><span class="status have">have</span></td></tr>
+      <tr><td><code>seed n</code></td><td>Deterministic randomness</td><td>32‑bit LCG in plain arithmetic: <code>s = (s·1664525 + 1013904223) mod 2³²</code> — no <code>Math.imul</code> in ES5; products stay under 2⁵³.</td><td>—</td><td><span class="status next">next</span></td></tr>
+      <tr><td><code>euclid k n rot</code></td><td>Euclidean rhythm on one pitch into the selected slot</td><td>Step <i>i</i> is a hit iff <code>(i·k) mod n &lt; k</code>, then rotate by <i>rot</i>. Gives E(k,n) up to rotation; E(5,16) is the classic off‑beat hat.</td><td><code>create_clip</code>, <code>add_new_notes</code></td><td><span class="status next">next</span></td></tr>
+      <tr><td><code>mutate p seed</code></td><td>N variants of the selected clip into the slots below</td><td>Per note: with probability <i>p</i> apply one edit from {drop, shift ±1 step, velocity ±15, octave ±12 (melodic only)}. Never touch beat 1 of the kick. Name: <code>hat A ~mutate .15 #7</code>.</td><td><code>get_notes_extended</code>, <code>duplicate_clip_slot</code>, <code>remove_notes_extended</code>, <code>add_new_notes</code></td><td><span class="status next">next</span></td></tr>
+      <tr><td><code>markov order bars seed</code></td><td>New phrase in the style of the selected clip(s)</td><td>Tokens = (pitch class, duration). Build an order‑<i>k</i> transition table from every clip on the track; sample a walk of the requested length; on a dead end restart from the start distribution. Order 1 wanders, order 2 quotes.</td><td><code>get_notes_extended</code> over the track, <code>add_new_notes</code></td><td><span class="status next">next</span></td></tr>
+      <tr><td><code>graph</code></td><td>Scene transition graph</td><td>Nodes = scenes, edge A→B allowed if shared tracks keep ≥ 1 part and the energy (note density × velocity) changes by ≤ 1 tier. Printed as an adjacency list; <code>arrange</code> walks it.</td><td><code>scenes</code>, <code>clip_slots</code>, <code>get_notes_extended</code></td><td><span class="status later">later</span></td></tr>
+      <tr><td><code>arrange grammar seed</code></td><td>Write an arrangement from a grammar</td><td>Probabilistic CFG expanded depth‑first with a bar budget (64–96); terminals are scenes; consecutive terminals must be an edge in <code>graph</code>. Emits clips at bar offsets.</td><td><code>duplicate_clip_to_arrangement</code>, <code>create_scene</code></td><td><span class="status later">later</span></td></tr>
+      <tr><td><code>density from to</code></td><td>Energy curve across a section</td><td>Per bar, target hits = linear ramp; thin or thicken by removing/adding the lowest‑velocity notes first.</td><td>note calls as above</td><td><span class="status later">later</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid2">
+    <div class="card">
+      <h4>Ground rules from the README</h4>
+      <ul style="font-size:.9rem">
+        <li>ES5 only in <code>js</code>: <code>var</code>, <code>function</code>, no arrows, no template strings, no <code>Math.imul</code>. Escalate to Max 9's <code>v8</code> object only if a command really needs modern JS.</li>
+        <li>Never construct <code>LiveAPI</code> at file scope; build inside the function that runs on the button press or on <code>live.thisdevice</code>'s bang.</li>
+        <li><code>get()</code> returns arrays; note data comes back as a JSON string from <code>get_notes_extended</code> — parse it.</li>
+        <li>Long jobs: chunk with <code>Task</code> so the UI thread stays responsive; 168 px device height for any extra UI.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Why seeds and names matter</h4>
+      <p style="font-size:.92rem">A variation we like next week must be explainable and reproducible. Command + arguments + seed in the clip name makes every generated clip a function call we can re‑run, and a <code>.als</code> diff readable: a rename shows up as one line of XML.</p>
+    </div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="sechead"><div class="eyebrow">Things that are always true</div><h2>Invariants</h2></div>
+  <div class="card">
+    <div class="rule"><span class="mono">mode ∈ {Standalone, ControlLive}</span><span>File API (sync, push) only in Standalone; controller only in ControlLive over USB. Every phase names its mode.</span></div>
+    <div class="rule"><span class="mono">Set → bundle → .als</span><span>A strict order with no inverse. The bundle in <code>archive/</code> is the last state both worlds share.</span></div>
+    <div class="rule"><span class="mono">audio cycles, sets don't</span><span>Anything we want back on Move goes as WAV into <code>Samples/</code>.</span></div>
+    <div class="rule"><span class="mono">generated ⇒ seeded ∧ named</span><span>No anonymous clips. If it can't be regenerated it gets played by hand instead.</span></div>
+    <div class="rule"><span class="mono">cookie age &lt; 30 d</span><span>Otherwise the script re‑pairs: read the code off Move, type it. Budget a minute for it at the start of a session.</span></div>
+    <div class="rule"><span class="mono">one Set = one candidate</span><span>We don't merge Sets on Move. Combining ideas happens in Live, where tracks can be dragged between projects.</span></div>
+  </div>
+</section>
+
+<section id="files">
+  <div class="sechead"><div class="eyebrow">Conventions</div><h2>Files & naming</h2></div>
+  <div class="twocol">
+    <div class="card">
+      <h4>Layout</h4>
+      <pre><code>~/Music/Ableton/Move Sets/
+├── move-sync.py · .move-cookies.txt
+├── &lt;Name&gt;.ablbundle              <span class="c">latest pull</span>
+└── archive/2026-08-21/…          <span class="c">snapshots, never edited</span>
+
+/Volumes/Bisonte/Bisonte/
+└── &lt;Name&gt; Project/
+    ├── &lt;Name&gt; v01.als            <span class="c">the commit</span>
+    ├── &lt;Name&gt; v02.als …
+    ├── Samples/                  <span class="c">Live‑managed</span>
+    └── Renders/
+        ├── master/ · stems/
+        └── seeds/                <span class="c">loops + one‑shots pushed to Move</span></code></pre>
+    </div>
+    <div class="card">
+      <h4>Names</h4>
+      <ul style="font-size:.9rem">
+        <li>Projects and Sets share the name Move gave them; rename on Move, not after.</li>
+        <li>Versions: <code>v01, v02…</code> at structural changes; <code>v02b</code> for a mix alternative.</li>
+        <li>Clips by function: <code>kick A</code>, <code>hat A'</code>, <code>bass B</code>. Generated suffix: <code>~cmd args #seed</code>.</li>
+        <li>Scenes: <code>A · B · A' · Break · B'</code> — the same symbols the grammar uses.</li>
+      </ul>
+      <h4 style="margin-top:.5rem">Optional: readable .als history</h4>
+      <pre><code><span class="c"># once, in /Volumes/Bisonte/Bisonte</span>
+git init
+echo '*.als diff=als' &gt; .gitattributes
+echo 'Samples/' &gt;&gt; .gitignore
+git config diff.als.textconv 'gunzip -c'
+<span class="c"># git diff now shows the XML changes between versions</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="sprints">
+  <div class="sechead"><div class="eyebrow">Next four weeks</div><h2>Sprints</h2>
+  <p>Each sprint ends with music, not only tooling. Dates are targets, not promises.</p></div>
+  <div class="sprints">
+    <div class="sprint"><span class="eyebrow">Sprint 1 · to Aug 28</span><span class="goal">The ritual works end to end</span>
+      <ul><li>Bisonte Template.als in the User Library</li><li>Archive + sync + commit done on three fresh Move sketches</li><li><code>seed</code> and <code>euclid</code> in lomctl.js</li></ul></div>
+    <div class="sprint"><span class="eyebrow">Sprint 2 · to Sep 4</span><span class="goal">Variations you'd actually keep</span>
+      <ul><li><code>mutate</code> and <code>markov</code>, tested on the BNYX demos</li><li>One sketch taken to a rough 3‑minute arrangement by hand</li></ul></div>
+    <div class="sprint"><span class="eyebrow">Sprint 3 · to Sep 11</span><span class="goal">Structure from the scripts</span>
+      <ul><li><code>graph</code> and <code>arrange</code>; compare a grammar arrangement with a USB jam of the same scenes</li><li><code>move-sync.py push</code> uploading renders to <code>Samples/Bisonte/</code></li></ul></div>
+    <div class="sprint"><span class="eyebrow">Sprint 4 · to Sep 18</span><span class="goal">First finished track</span>
+      <ul><li>Mix, render, version, archive</li><li>Second loop started on Move from the first track's seeds</li><li>Retro: what the scripts proposed that we kept — adjust the backlog</li></ul></div>
+  </div>
+</section>
+
+<section id="open">
+  <div class="sechead"><div class="eyebrow">To decide</div><h2>Open questions</h2></div>
+  <ul>
+    <li><b>Link over Wi‑Fi for tempo</b> while sketching next to Live — not covered by the README; test whether it coexists with Move Manager before relying on it.</li>
+    <li><b>Max MIDI Tools vs LOM Console</b> for per‑clip generators: Live 12 lets Max for Live devices act as Generators/Transformers in the clip editor. Worth it once <code>euclid</code>/<code>mutate</code> prove themselves, so they live where Live's own tools do.</li>
+    <li><b>Where the "energy" of a scene comes from</b> for <code>graph</code>: note density and velocity alone, or also device parameters (filter cutoff, send levels)?</li>
+    <li><b>Tempo and key</b> per project or per session: a house default (e.g. 124 BPM) speeds up sketching but narrows the output.</li>
+  </ul>
+</section>
+
+<footer>Companion to the <a href="https://claude.ai/code/artifact/8bb7e450-6f00-403e-8a4a-58bb533f4a91">Move Field Guide</a>. Constraints come from the Bisonte README (2026‑08‑20); revise both when Move firmware or Live changes them.</footer>
+</main>
+</div>
+</body>
+</html>

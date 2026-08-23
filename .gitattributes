@@ -1,0 +1,6 @@
+# Readable diffs for Live Sets: gunzip the XML before diffing.
+# Enable once per clone:  git config diff.als.textconv 'gunzip -c'
+*.als    diff=als
+*.alp    binary
+*.amxd   binary
+*.ablbundle binary

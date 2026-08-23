@@ -1,0 +1,24 @@
+# --- secrets ---
+.move-cookies.txt
+*cookies*.txt
+
+# --- audio & bulk: never in git ---
+*.ablbundle
+*.wav
+*.aif
+*.aiff
+*.mp3
+*.flac
+Samples/
+Renders/
+archive/
+Packs/
+Factory Packs/
+
+# --- Live project cruft ---
+Ableton Project Info/
+*.als.bak
+Backup/
+
+# --- os ---
+.DS_Store

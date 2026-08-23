@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Move Field Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f2f4f5; --panel:#ffffff; --panel2:#e9edef; --ink:#151a1e; --ink2:#4b565e; --ink3:#7b868d;
+  --line:#d5dbdf; --accent:#e0631f; --accent-ink:#9a3f0c; --accent-soft:#fbe9dd;
+  --ok:#2f8f5b; --warn:#c98a12; --bad:#c43b2c;
+  --pad:#1b2126; --pad-lit:#e0631f; --code-bg:#1b2126; --code-ink:#e6ebee; --code-hi:#ffb27a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+    --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+    --ok:#4fbd80; --warn:#e0a63a; --bad:#e5604f;
+    --pad:#0c0f11; --pad-lit:#f07a37; --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+  --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+  --ok:#4fbd80; --warn:#e0a63a; --bad:#e5604f;
+  --pad:#0c0f11; --pad-lit:#f07a37; --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--accent-ink)}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+code{background:var(--panel2);padding:.1em .35em;border-radius:3px;font-size:.9em}
+pre{background:var(--code-bg);color:var(--code-ink);padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.86rem;line-height:1.6;margin:0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#7e8991}
+pre .h{color:var(--code-hi)}
+h1,h2,h3{font-family:"Archivo",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0;max-width:68ch}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.wrap{max-width:1180px;margin:0 auto;padding:2.5rem 1.5rem 5rem;display:grid;grid-template-columns:200px minmax(0,1fr);gap:3rem}
+nav{position:sticky;top:1.5rem;align-self:start;display:flex;flex-direction:column;gap:.35rem;font-size:.88rem}
+nav a{color:var(--ink2);text-decoration:none;padding:.25rem .5rem;border-left:2px solid var(--line)}
+nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{display:flex;flex-direction:column;gap:3.5rem}
+header.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2rem;align-items:end;padding-bottom:2rem;border-bottom:1px solid var(--line)}
+.hero .meta{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:1rem;font-size:.85rem;color:var(--ink2)}
+.hero .meta b{color:var(--ink);font-weight:600}
+section{display:flex;flex-direction:column;gap:1.25rem}
+.sechead{display:flex;flex-direction:column;gap:.35rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.4rem;display:flex;flex-direction:column;gap:.8rem}
+.card h3{display:flex;align-items:center;gap:.6rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--ink2)}
+.chip.usb{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.chip.wifi{border-color:var(--ok);color:var(--ok)}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:.6rem}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:1.6rem 1fr;gap:.6rem;align-items:start}
+ol.steps li::before{content:counter(s);font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--accent-ink);background:var(--accent-soft);border-radius:4px;text-align:center;line-height:1.6rem;height:1.6rem}
+kbd{font-family:"IBM Plex Mono",monospace;font-size:.82em;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .4em;background:var(--panel2)}
+.callout{border-left:3px solid var(--warn);background:var(--panel);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:.3rem}
+.callout.bad{border-left-color:var(--bad)}
+.callout .eyebrow{color:inherit}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+th,td{text-align:left;padding:.6rem .9rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-weight:500;background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+.verb{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.75rem;font-weight:500;padding:.05rem .45rem;border-radius:3px;min-width:4.6rem;text-align:center;color:var(--ink);background:var(--panel2)}
+.verb.get{color:var(--ok)} .verb.post{color:var(--accent-ink)} .verb.del{color:var(--bad)} .verb.patch{color:var(--warn)}
+/* Move device drawing */
+.device{background:var(--pad);border-radius:14px;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.7rem;width:300px;color:#cfd6db;font-size:.7rem;font-family:"IBM Plex Mono",monospace}
+.device .screen{background:#06080a;border-radius:4px;height:38px;display:flex;align-items:center;justify-content:center;color:#f3d8c6;letter-spacing:.08em;border:1px solid #2a3238}
+.device .knobs{display:grid;grid-template-columns:repeat(8,1fr);gap:.4rem}
+.device .knob{aspect-ratio:1;border-radius:50%;background:#2a3238;border:2px solid #3a444b}
+.device .pads{display:grid;grid-template-columns:repeat(8,1fr);gap:.35rem}
+.device .pad{aspect-ratio:1;border-radius:3px;background:#2a3238}
+.device .steps{display:grid;grid-template-columns:repeat(16,1fr);gap:.2rem}
+.device .step{height:10px;border-radius:2px;background:#2a3238}
+.device .lit{background:var(--pad-lit);box-shadow:0 0 8px var(--pad-lit)}
+.device .row{display:flex;justify-content:space-between;align-items:center}
+.device .btn{background:#2a3238;border-radius:3px;padding:.15rem .45rem}
+.device .btn.lit{background:var(--pad-lit);color:#1b1b1b;box-shadow:none}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;align-items:stretch}
+.flow .node{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem .9rem;font-size:.85rem;display:flex;flex-direction:column;gap:.25rem;position:relative}
+.flow .node .eyebrow{font-size:.65rem}
+.flow .node.door{border-color:var(--bad);border-style:dashed}
+.flow .node::after{content:"→";position:absolute;right:-.85rem;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:1rem}
+.flow .node:last-child::after{content:""}
+footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);padding-top:1.5rem}
+@media (max-width:820px){.wrap{grid-template-columns:1fr;gap:1.5rem}nav{position:static;flex-direction:row;flex-wrap:wrap}nav a{border-left:0;border-bottom:2px solid var(--line)}header.hero{grid-template-columns:1fr}.device{width:100%;max-width:320px}.flow .node::after{content:""}}
+@media (prefers-reduced-motion:no-preference){.device .lit{animation:pulse 2.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.55}}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav aria-label="Sections">
+  <a href="#modes">Two modes</a>
+  <a href="#usb">Control Live (USB)</a>
+  <a href="#wifi">Move Manager (Wi‑Fi)</a>
+  <a href="#sync">move‑sync.py</a>
+  <a href="#api">HTTP API</a>
+  <a href="#quirks">Quirks</a>
+  <a href="#roundtrip">Set round‑trip</a>
+  <a href="#cheat">Cheat sheet</a>
+</nav>
+
+<main>
+<header class="hero">
+  <div>
+    <div class="eyebrow">Music Experiment · Bisonte</div>
+    <h1 style="margin-top:.4rem">Move Field Guide</h1>
+    <p style="margin-top:1rem;color:var(--ink2)">How the Ableton Move talks to this machine: as a controller over USB, or as a file server over Wi‑Fi. Never both at once.</p>
+    <div class="meta">
+      <span>Move <b>fw 2.0.5</b> / AbletonOS 3.18</span>
+      <span>Live <b>12.3.2 Suite</b></span>
+      <span>Host <b>move.local</b></span>
+      <span>Verified <b>2026‑08‑20</b></span>
+    </div>
+  </div>
+  <div class="device" aria-label="Move front panel, Shift + Step 2 highlighted">
+    <div class="screen">SETUP › CONTROL LIVE</div>
+    <div class="knobs"><span class="knob"></span><span class="knob"></span><span class="knob"></span><span class="knob"></span><span class="knob"></span><span class="knob"></span><span class="knob"></span><span class="knob"></span></div>
+    <div class="pads">
+      <span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span>
+      <span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span>
+      <span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span>
+      <span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span><span class="pad"></span>
+    </div>
+    <div class="steps"><span class="step"></span><span class="step lit"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span><span class="step"></span></div>
+    <div class="row"><span class="btn lit">SHIFT</span><span>hold SHIFT + STEP 2 → Setup</span></div>
+  </div>
+</header>
+
+<section id="modes">
+  <div class="sechead"><div class="eyebrow">Orientation</div><h2>Two independent connections</h2>
+  <p>Move exposes two unrelated interfaces. Pick the one the task needs; switching means leaving the other.</p></div>
+  <div class="grid2">
+    <div class="card">
+      <h3><span class="chip usb">USB‑C</span> Control Live</h3>
+      <p>Move becomes a control surface for Live 12: pads, knobs, transport, device control. Uses the factory <code>Move</code> MIDI Remote Script that ships inside the Live app — nothing to install.</p>
+      <p style="color:var(--ink2);font-size:.9rem">Use it for: playing and recording into a Live set from the hardware.</p>
+    </div>
+    <div class="card">
+      <h3><span class="chip wifi">Wi‑Fi</span> Move Manager</h3>
+      <p>Move runs a web app and HTTP API at <code>http://move.local</code> (ports 80 and 22). Browse, download, upload, rename and delete Sets, Samples and Recordings; ask Move to render a file to audio.</p>
+      <p style="color:var(--ink2);font-size:.9rem">Use it for: getting Sets and recordings onto this machine, and scripting Move's storage.</p>
+    </div>
+  </div>
+  <div class="callout">
+    <div class="eyebrow">Mutually exclusive</div>
+    <p>Control Live only works over USB, never Wi‑Fi. And while Control Live is active the file API <b>refuses uploads</b>. Put Move back in Standalone Mode (its normal state) before pairing or syncing.</p>
+  </div>
+</section>
+
+<section id="usb">
+  <div class="sechead"><div class="eyebrow">Mode A</div><h2>Control Live over USB</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <ol class="steps">
+        <li><span>On Move, hold <kbd>Shift</kbd> and press <kbd>Step 2</kbd> to open the Setup menu.</span></li>
+        <li><span>Turn the wheel to <b>Control Live</b>, press the wheel to confirm.</span></li>
+        <li><span>Connect USB‑C and open Live. The <code>Move</code> control surface auto‑configures.</span></li>
+        <li><span>Verify under <b>Settings → Link / Tempo / MIDI</b>: Control Surface = Move, input and output = Move.</span></li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>Requirements</h3>
+      <p>Live ≥ 12.1 (we run 12.3.2). Script path, for reference only:</p>
+      <pre><code>/Volumes/Bisonte/Applications/Ableton Live 12 Suite.app/
+  Contents/App-Resources/MIDI Remote Scripts/Move/</code></pre>
+      <p style="font-size:.9rem;color:var(--ink2)">It is one of 144 factory scripts. Don't copy it into the User Library; Live loads it from the app bundle.</p>
+    </div>
+  </div>
+</section>
+
+<section id="wifi">
+  <div class="sechead"><div class="eyebrow">Mode B</div><h2>Move Manager over Wi‑Fi</h2>
+  <p>Move and the Mac must be on the same network. Open <a href="http://move.local">http://move.local</a> in a browser for the web UI, or use the API directly.</p></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Pairing (one‑time per 30 days)</h3>
+      <ol class="steps">
+        <li><span>Client sends <code>POST /api/v1/challenge</code> with <code>Accept: application/json</code>.</span></li>
+        <li><span>Move shows a <b>6‑digit code</b> on its display.</span></li>
+        <li><span>Client sends <code>POST /api/v1/challenge-response</code> with <code>{"secret":"123456"}</code>.</span></li>
+        <li><span>Response sets cookie <code>Ableton-Challenge-Response-Token</code>, Max‑Age 30 days. Send it on every later call.</span></li>
+      </ol>
+      <p style="font-size:.9rem;color:var(--ink2)">Move must be in Standalone Mode to pair. Wrong code → 401. Too many tries → 429 with <code>Retry-After</code>.</p>
+    </div>
+    <div class="card">
+      <h3>Storage tree</h3>
+      <pre><code>/api/v1/files/
+├── Sets/&lt;uuid&gt;/&lt;Name&gt;/Song.abl   <span class="c">isBundle: true</span>
+├── Recordings/
+├── Samples/
+├── Track Presets/
+├── Audio Effects/
+└── MIDI Capture Logs/</code></pre>
+      <p style="font-size:.9rem;color:var(--ink2)">Downloading a Set's <code>Song.abl</code> yields the zip that Move Manager names <code>&lt;Name&gt;.ablbundle</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="sync">
+  <div class="sechead"><div class="eyebrow">Day‑to‑day tool</div><h2>move‑sync.py</h2>
+  <p>Stdlib‑only Python 3.10 script, already paired. Lives next to the pulled Sets. It re‑pairs itself when the cookie expires: Move shows the code, you type it in.</p></div>
+  <pre><code><span class="c"># working directory</span>
+cd ~/Music/Ableton/Move\ Sets
+
+<span class="h">python3 move-sync.py sets</span>              <span class="c"># download every Set as &lt;Name&gt;.ablbundle</span>
+<span class="h">python3 move-sync.py list</span>              <span class="c"># browse Move's storage tree</span>
+<span class="h">python3 move-sync.py pull Recordings</span>   <span class="c"># mirror a raw bucket (Samples, Recordings…)</span>
+
+<span class="c"># then: double-click any .ablbundle to open it in Live 12</span></code></pre>
+  <div class="grid2">
+    <div class="card">
+      <h3>Files</h3>
+      <div class="tablewrap"><table>
+        <tr><td><code>move-sync.py</code></td><td>the tool</td></tr>
+        <tr><td><code>.move-cookies.txt</code></td><td>session cookie, mode 600, valid 30 days</td></tr>
+        <tr><td><code>*.ablbundle</code></td><td>one per Set; zip of <code>Song.abl</code> + <code>Samples/*.wav</code></td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>Current inventory</h3>
+      <p style="font-size:.9rem">Alice Ivy · BNYX Demo 1–4 · Heavy Mellow (50 MB, mostly samples) · Jose Castillo. All bundles verified to contain <code>Song.abl</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="api">
+  <div class="sechead"><div class="eyebrow">Reference</div><h2>HTTP API</h2>
+  <p>Reverse‑engineered from Move Manager's JS bundle. Everything under <code>/api/v1/</code> needs the session cookie except <code>/language</code>.</p></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Method</th><th>Path</th><th>Does</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb post">POST</span></td><td><code>/api/v1/challenge</code></td><td>Start pairing; Move displays code. Needs <code>Accept: application/json</code> or you get a bare 400.</td></tr>
+      <tr><td><span class="verb post">POST</span></td><td><code>/api/v1/challenge-response</code></td><td>Body <code>{"secret":"&lt;code&gt;"}</code> → <code>Set-Cookie: Ableton-Challenge-Response-Token</code></td></tr>
+      <tr><td><span class="verb get">GET</span></td><td><code>/api/v1/files/</code></td><td>Top‑level buckets</td></tr>
+      <tr><td><span class="verb get">GET</span></td><td><code>/api/v1/files/&lt;path&gt;</code></td><td>List a directory, or download a file</td></tr>
+      <tr><td><span class="verb post">POST</span></td><td><code>/api/v1/files/&lt;path&gt;</code></td><td>Create directory, or multipart upload (<code>?overwrite=true</code>)</td></tr>
+      <tr><td><span class="verb patch">PATCH</span></td><td><code>/api/v1/files/&lt;p&gt;/&lt;name&gt;</code></td><td>Rename / move: body <code>{"path":"new/full/path"}</code></td></tr>
+      <tr><td><span class="verb del">DELETE</span></td><td><code>/api/v1/files/&lt;path&gt;</code></td><td>Delete</td></tr>
+      <tr><td><span class="verb get">GET</span></td><td><code>/api/v1/convert/&lt;path&gt;.wav</code></td><td>Move renders the file to audio and returns the WAV</td></tr>
+      <tr><td><span class="verb">OPTIONS</span></td><td><code>/api/v1/files/&lt;path&gt;</code></td><td>Capabilities plus disk‑usage headers</td></tr>
+      <tr><td><span class="verb get">GET</span></td><td><code>/api/v1/is-move-running</code> · <code>system/version</code> · <code>cloud-auth/*</code> · <code>ssh</code> · <code>syslog/zip</code> · <code>update</code></td><td>Housekeeping endpoints</td></tr>
+    </tbody>
+  </table></div>
+  <pre><code><span class="c"># minimal curl session</span>
+curl -s -X POST -H "Accept: application/json" http://move.local/api/v1/challenge
+<span class="c"># …read the 6-digit code off Move's display…</span>
+curl -s -c jar.txt -X POST -H "Content-Type: application/json" \
+     -d '{"secret":"123456"}' http://move.local/api/v1/challenge-response
+curl -s -b jar.txt http://move.local/api/v1/files/Sets/ | python3 -m json.tool</code></pre>
+</section>
+
+<section id="quirks">
+  <div class="sechead"><div class="eyebrow">Hard‑won</div><h2>Quirks</h2></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Paths come pre‑encoded</h3>
+      <p><code>path</code> values in responses are already URL‑encoded (<code>Alice%20Ivy</code>). Reuse them verbatim in URLs; unquote only for display. Encoding them again gives a 404.</p>
+    </div>
+    <div class="card">
+      <h3>Error decoder</h3>
+      <div class="tablewrap"><table>
+        <tr><td><code>401 {"error":"Unset credentials"}</code></td><td>no / expired cookie</td></tr>
+        <tr><td><code>401</code> on challenge‑response</td><td>wrong pairing code</td></tr>
+        <tr><td><code>429</code> + <code>Retry-After</code></td><td>rate‑limited pairing</td></tr>
+        <tr><td>bare <code>400</code> on challenge</td><td>missing <code>Accept</code> header</td></tr>
+        <tr><td>upload refused</td><td>Move is in Control Live mode</td></tr>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<section id="roundtrip">
+  <div class="sechead"><div class="eyebrow">Data flow</div><h2>Set round‑trip</h2></div>
+  <div class="flow">
+    <div class="node"><span class="eyebrow">On Move</span><b>Set</b><span style="color:var(--ink2)">Sets/&lt;uuid&gt;/&lt;Name&gt;/Song.abl</span></div>
+    <div class="node"><span class="eyebrow">move‑sync.py sets</span><b>.ablbundle</b><span style="color:var(--ink2)">~/Music/Ableton/Move Sets/</span></div>
+    <div class="node"><span class="eyebrow">double‑click</span><b>Open in Live 12</b><span style="color:var(--ink2)">edit, add devices, mix</span></div>
+    <div class="node door"><span class="eyebrow">Save</span><b>.als</b><span style="color:var(--bad)">one‑way door — never returns to Move</span></div>
+  </div>
+  <div class="callout bad">
+    <div class="eyebrow">Before you save as .als</div>
+    <p>Duplicate the Set on Move first if you want to keep iterating on the hardware. Once it's a Live project it stays a Live project.</p>
+  </div>
+  <p style="color:var(--ink2);font-size:.9rem">Alternative route: Move Manager → Settings → enable Cloud, sign in to Ableton Cloud in Live, Sets appear under <b>Places → Cloud</b>. Works, but LAN sync is faster and doesn't burn hotspot data.</p>
+</section>
+
+<section id="cheat">
+  <div class="sechead"><div class="eyebrow">Pocket version</div><h2>Cheat sheet</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>I want to…</th><th>Do this</th></tr></thead>
+    <tbody>
+      <tr><td>Play Live from Move</td><td><kbd>Shift</kbd>+<kbd>Step 2</kbd> → Control Live → plug in USB‑C</td></tr>
+      <tr><td>Go back to using Move on its own / syncing</td><td>Same menu → Standalone Mode</td></tr>
+      <tr><td>Pull all Sets</td><td><code>python3 move-sync.py sets</code></td></tr>
+      <tr><td>Pull recordings or samples</td><td><code>python3 move-sync.py pull Recordings</code></td></tr>
+      <tr><td>See what's on Move</td><td><code>python3 move-sync.py list</code> or open <code>http://move.local</code></td></tr>
+      <tr><td>Open a Set in Live</td><td>Double‑click the <code>.ablbundle</code></td></tr>
+      <tr><td>Keep editing on Move later too</td><td>Duplicate the Set on Move <em>before</em> saving as <code>.als</code></td></tr>
+      <tr><td>Get a WAV of something on Move</td><td><code>GET /api/v1/convert/&lt;path&gt;.wav</code></td></tr>
+      <tr><td>Fix "Unset credentials"</td><td>Re‑pair: delete <code>.move-cookies.txt</code>, rerun the script, type the code</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>Derived from the Bisonte README (2026‑08‑20). Update this page when Move firmware or Live changes the behaviour above.</footer>
+</main>
+</div>
+</body>
+</html>
