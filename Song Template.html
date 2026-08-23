@@ -1,0 +1,308 @@
+<title>Song Template</title>
+<style>
+:root{
+  --bg:#f2f4f5; --panel:#ffffff; --panel2:#e9edef; --ink:#151a1e; --ink2:#4b565e; --ink3:#7b868d;
+  --line:#d5dbdf; --accent:#e0631f; --accent-ink:#9a3f0c; --accent-soft:#fbe9dd;
+  --ok:#2f8f5b; --ok-soft:#e3f2e9; --warn:#c98a12; --bad:#c43b2c;
+  --code-bg:#1b2126; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#8a959c;
+  --l1:#c4553c; --l2:#c08a2e; --l3:#3f8f63; --l4:#3d7ba8; --l5:#7a5f9e; --l6:#a8517a;
+  --e1:#cfd6da; --e5:#e0631f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+    --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+    --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f;
+    --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+    --l1:#e0765a; --l2:#e0a63a; --l3:#5cb684; --l4:#5d9dcb; --l5:#a081c4; --l6:#cd7aa0;
+    --e1:#333c42; --e5:#f07a37;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+  --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+  --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f;
+  --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+  --l1:#e0765a; --l2:#e0a63a; --l3:#5cb684; --l4:#5d9dcb; --l5:#a081c4; --l6:#cd7aa0;
+  --e1:#333c42; --e5:#f07a37;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--accent-ink)}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+code{background:var(--panel2);padding:.1em .35em;border-radius:3px;font-size:.9em}
+pre{background:var(--code-bg);color:var(--code-ink);padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.84rem;line-height:1.6;margin:0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .c{color:var(--code-c)} pre .h{color:var(--code-hi)}
+h1,h2,h3{font-family:"Archivo",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:1.1rem;max-width:68ch} li{margin:.2rem 0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.wrap{max-width:1180px;margin:0 auto;padding:2.5rem 1.5rem 5rem;display:grid;grid-template-columns:200px minmax(0,1fr);gap:3rem}
+nav{position:sticky;top:1.5rem;align-self:start;display:flex;flex-direction:column;gap:.35rem;font-size:.88rem}
+nav a{color:var(--ink2);text-decoration:none;padding:.25rem .5rem;border-left:2px solid var(--line)}
+nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{display:flex;flex-direction:column;gap:3.5rem}
+header.hero{padding-bottom:2rem;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:1rem}
+.hero .meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;color:var(--ink2)}
+.hero .meta b{color:var(--ink);font-weight:600}
+section{display:flex;flex-direction:column;gap:1.25rem}
+.sechead{display:flex;flex-direction:column;gap:.35rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.4rem;display:flex;flex-direction:column;gap:.8rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+.chip.move{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.chip.live{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+.callout{border-left:3px solid var(--warn);background:var(--panel);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:.3rem}
+.callout.ok{border-left-color:var(--ok)} .callout.bad{border-left-color:var(--bad)}
+.callout .eyebrow{color:inherit}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:500;background:var(--panel2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+td.on{color:var(--ink);font-weight:600}
+td.off{color:var(--ink3)}
+td.part{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink2)}
+/* arrangement bar — sections sized by length, height by energy */
+.arr{display:flex;align-items:flex-end;gap:3px;height:132px;padding:1rem 1.1rem;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.arr .sec{display:flex;flex-direction:column;justify-content:flex-end;gap:.35rem;min-width:0}
+.arr .bar{border-radius:3px 3px 0 0;background:var(--sc,var(--accent));opacity:.9}
+.arr .lb{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.04em;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arr .bx{font-family:"IBM Plex Mono",monospace;font-size:.62rem;color:var(--ink3)}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.78rem;color:var(--ink3);font-family:"IBM Plex Mono",monospace}
+.tree{background:var(--code-bg);color:var(--code-ink);padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.82rem;line-height:1.65;font-family:"IBM Plex Mono",monospace}
+.tree .d{color:var(--code-hi)} .tree .c{color:var(--code-c)}
+.chain{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem}
+.chain .n{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.7rem .85rem;font-size:.83rem;position:relative;display:flex;flex-direction:column;gap:.2rem}
+.chain .n .eyebrow{font-size:.62rem}
+.chain .n::after{content:"→";position:absolute;right:-.8rem;top:50%;transform:translateY(-50%);color:var(--ink3)}
+.chain .n:last-child::after{content:""}
+footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);padding-top:1.5rem}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr;gap:1.5rem}
+  nav{position:static;flex-direction:row;flex-wrap:wrap}
+  nav a{border-left:0;border-bottom:2px solid var(--line)}
+  .chain .n::after{content:""}
+  .arr{height:104px}
+}
+</style>
+
+<div class="wrap">
+<nav>
+  <a href="#two">Two structures</a>
+  <a href="#form">The form</a>
+  <a href="#matrix">Who plays where</a>
+  <a href="#folders">On disk</a>
+  <a href="#names">The name chain</a>
+  <a href="#versions">Versions</a>
+  <a href="#start">Starting one</a>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="eyebrow">Music Experiment · Bisonte</div>
+  <h1>Song Template</h1>
+  <p>One default shape every song starts from — a folder skeleton and an arrangement skeleton that refer to each other. Section names are scene names are grammar terminals. Decide tempo and key once, then fill in the blanks.</p>
+  <div class="meta">
+    <div><b>Default form</b> 104 bars · 7 sections</div>
+    <div><b>At 124 BPM</b> 3:21</div>
+    <div><b>Scaffold</b> <code>new-song.sh</code></div>
+    <div><b>Plan v1</b> 2026-08-22</div>
+  </div>
+</header>
+
+<section id="two">
+  <div class="sechead">
+    <div class="eyebrow">Why one template covers both</div>
+    <h2>Two structures, one vocabulary</h2>
+  </div>
+  <p>A song has a shape on disk and a shape in time, and they are easy to let drift apart. Here they share one set of names, so a folder tells you where you are in the song and a scene tells you which file to look for.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Shape in time</h3>
+      <p style="font-size:.9rem">Seven sections, 104 bars. Every section is a multiple of 8 — which matters because the bed is 8 bars, so any bed loops cleanly into any section without a cut.</p>
+      <p style="font-size:.9rem">Section names double as Live scene names and as the terminals the <code>arrange</code> grammar expands to.</p>
+    </div>
+    <div class="card">
+      <h3>Shape on disk</h3>
+      <p style="font-size:.9rem">One folder per song holding the Live set, the beds, the layer bundles pulled from Move, and the renders. Plus <code>SONG.md</code> — tempo, key, the form table, and a log of which bed each part was played against.</p>
+      <p style="font-size:.9rem">Created by <code>new-song.sh</code>, so it is identical every time.</p>
+    </div>
+  </div>
+</section>
+
+<section id="form">
+  <div class="sechead">
+    <div class="eyebrow">Default arrangement</div>
+    <h2>The form</h2>
+  </div>
+  <div class="arr">
+    <div class="sec" style="flex:16"><div class="bar" style="height:22px;--sc:var(--l5)"></div><div class="lb">INTRO</div><div class="bx">16</div></div>
+    <div class="sec" style="flex:16"><div class="bar" style="height:58px;--sc:var(--l1)"></div><div class="lb">A</div><div class="bx">16</div></div>
+    <div class="sec" style="flex:16"><div class="bar" style="height:76px;--sc:var(--l4)"></div><div class="lb">B</div><div class="bx">16</div></div>
+    <div class="sec" style="flex:8"><div class="bar" style="height:40px;--sc:var(--l3)"></div><div class="lb">BRK</div><div class="bx">8</div></div>
+    <div class="sec" style="flex:16"><div class="bar" style="height:94px;--sc:var(--accent)"></div><div class="lb">B'</div><div class="bx">16</div></div>
+    <div class="sec" style="flex:16"><div class="bar" style="height:58px;--sc:var(--l1)"></div><div class="lb">A'</div><div class="bx">16</div></div>
+    <div class="sec" style="flex:16"><div class="bar" style="height:22px;--sc:var(--l5)"></div><div class="lb">OUTRO</div><div class="bx">16</div></div>
+  </div>
+  <div class="legend"><span>width = bars</span><span>height = energy tier 1–5</span><span>total 104 bars</span></div>
+  <p>The shape is deliberately conventional: build, state, lift, drop out, pay off, restate, leave. The value is not originality — it is that you never start from a blank arrangement, and the break at bar 48 is decided before you have written a note.</p>
+  <div class="callout">
+    <div class="eyebrow">The break is the point</div>
+    <p><b>BREAK</b> is the only section shorter than 16 bars and the only one that drops energy sharply. It exists so B′ lands. If a song feels flat, the break is usually too long, too busy, or missing.</p>
+  </div>
+</section>
+
+<section id="matrix">
+  <div class="sechead">
+    <div class="eyebrow">The useful half of the template</div>
+    <h2>Who plays where</h2>
+  </div>
+  <p>This grid is how the "everybody rests" rule gets enforced. Playing parts one at a time, alone, produces layers that play constantly — here you decide in advance where each one stops.</p>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Section</th><th>Bars</th><th>Ends</th><th>Energy</th>
+          <th>L1 drums</th><th>L2 bass</th><th>L3 rhythm</th><th>L4 lead</th><th>L5 atmos</th><th>L6 prod</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="n">1</td><td><b>INTRO</b></td><td class="n">16</td><td class="n">16</td><td class="n">1</td>
+          <td class="part">filtered</td><td class="off">—</td><td class="off">—</td><td class="off">—</td><td class="on">●</td><td class="part">riser →</td></tr>
+        <tr><td class="n">2</td><td><b>A</b></td><td class="n">16</td><td class="n">32</td><td class="n">3</td>
+          <td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="off">—</td><td class="on">●</td><td class="off">—</td></tr>
+        <tr><td class="n">3</td><td><b>B</b></td><td class="n">16</td><td class="n">48</td><td class="n">4</td>
+          <td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="off">—</td></tr>
+        <tr><td class="n">4</td><td><b>BREAK</b></td><td class="n">8</td><td class="n">56</td><td class="n">2</td>
+          <td class="part">no kick</td><td class="off">—</td><td class="on">●</td><td class="off">—</td><td class="on">●</td><td class="part">tension</td></tr>
+        <tr><td class="n">5</td><td><b>B'</b></td><td class="n">16</td><td class="n">72</td><td class="n">5</td>
+          <td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="on">●</td><td class="part">fills</td></tr>
+        <tr><td class="n">6</td><td><b>A'</b></td><td class="n">16</td><td class="n">88</td><td class="n">3</td>
+          <td class="on">●</td><td class="on">●</td><td class="off">—</td><td class="on">●</td><td class="on">●</td><td class="off">—</td></tr>
+        <tr><td class="n">7</td><td><b>OUTRO</b></td><td class="n">16</td><td class="n">104</td><td class="n">1</td>
+          <td class="part">filtered</td><td class="on">●</td><td class="off">—</td><td class="off">—</td><td class="on">●</td><td class="off">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Read it down a column</h3>
+      <p style="font-size:.9rem">A layer with ● in every row is playing too much and will need thinning at mix time — which is late. <b>L5 atmosphere</b> is the deliberate exception: it plays throughout because it is the room, not a part.</p>
+      <p style="font-size:.9rem">Note <b>L3 rhythm</b> drops out in A′ so the lead has space, and <b>L4 lead</b> is silent for the first 48 bars.</p>
+    </div>
+    <div class="card">
+      <h3>Read it across a row</h3>
+      <p style="font-size:.9rem">A section with everything on has nowhere left to build. Only <b>B′</b> is full, which is what makes it the payoff.</p>
+      <p style="font-size:.9rem">Energy tiers move by one step between neighbours except into and out of BREAK — those jumps are the two deliberate discontinuities in the song.</p>
+    </div>
+  </div>
+  <p style="font-size:.9rem;color:var(--ink2)">This is a default, not a law. Change it per song in that song's <code>SONG.md</code> — but change it deliberately, and before tracking, not after.</p>
+</section>
+
+<section id="folders">
+  <div class="sechead">
+    <div class="eyebrow">One folder per song</div>
+    <h2>On disk</h2>
+  </div>
+  <div class="tree">
+<span class="c">/Volumes/Bisonte/Music Project/Bisonte/</span>
+└── <span class="d">&lt;Song&gt; Project/</span>
+    ├── <span class="d">&lt;Song&gt; v01.als</span>          <span class="c">the accumulating Live set</span>
+    ├── <span class="d">SONG.md</span>                  <span class="c">tempo, key, form, tracking log</span>
+    ├── <span class="d">Beds/</span>                    <span class="c">bed_v01…v06.wav — 8 bars each</span>
+    ├── <span class="d">Parts/</span>                   <span class="c">layer bundles pulled from Move</span>
+    │   ├── &lt;Song&gt; L1 drummer.ablbundle
+    │   └── &lt;Song&gt; L2 bassist.ablbundle
+    ├── <span class="d">Samples/</span>                 <span class="c">Live-managed, do not hand-edit</span>
+    ├── <span class="d">Ableton Project Info/</span>
+    └── <span class="d">Renders/</span>
+        ├── <span class="d">master/</span>              <span class="c">the mix</span>
+        ├── <span class="d">stems/</span>               <span class="c">one per layer group</span>
+        └── <span class="d">seeds/</span>               <span class="c">loops + one-shots pushed back to Move</span>
+</div>
+  <p>Two folders are new relative to the old playbook layout. <b>Beds/</b> holds the headphone mixes, one per layer committed. <b>Parts/</b> holds the bundles as pulled — the last state Move and Live share, and the thing to go back to when a part needs re-tracking.</p>
+  <div class="callout bad">
+    <div class="eyebrow">Path correction</div>
+    <p>The Move to Live Playbook says projects live in <code>/Volumes/Bisonte/Bisonte/</code>. That path does not exist — the real one is <code>/Volumes/Bisonte/Music Project/Bisonte/</code>. Worth fixing there.</p>
+  </div>
+</section>
+
+<section id="names">
+  <div class="sechead">
+    <div class="eyebrow">Name it once</div>
+    <h2>The name chain</h2>
+  </div>
+  <p>One decision on Move propagates everywhere. Get it right on the hardware and nothing needs renaming later.</p>
+  <div class="chain">
+    <div class="n"><div class="eyebrow">on Move</div><code>Bisonte Club 2 L2 bassist</code></div>
+    <div class="n"><div class="eyebrow">syncs as</div><code>… .ablbundle</code> into <code>Parts/</code></div>
+    <div class="n"><div class="eyebrow">in Live</div>group <code>L2 BASSIST</code></div>
+    <div class="n"><div class="eyebrow">stem</div><code>Renders/stems/L2 bassist.wav</code></div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Thing</th><th>Pattern</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Song</td><td><code>&lt;Song&gt;</code></td><td>Bisonte Club 2</td></tr>
+        <tr><td>Move Set</td><td><code>&lt;Song&gt; L&lt;N&gt; &lt;role&gt;</code></td><td>Bisonte Club 2 L4 lead</td></tr>
+        <tr><td>Bed</td><td><code>bed_v&lt;NN&gt;.wav</code></td><td>bed_v03.wav — contains L1–L3</td></tr>
+        <tr><td>Live group</td><td><code>L&lt;N&gt; &lt;ROLE&gt;</code></td><td>L4 LEAD</td></tr>
+        <tr><td>Scene</td><td>section name</td><td>INTRO · A · B · BREAK · B' · A' · OUTRO</td></tr>
+        <tr><td>Clip</td><td><code>&lt;part&gt; &lt;section&gt;</code></td><td>hat A · bass B</td></tr>
+        <tr><td>Generated clip</td><td><code>&lt;part&gt; ~&lt;cmd&gt; &lt;args&gt; #&lt;seed&gt;</code></td><td>hat A ~mutate .15 #7</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="versions">
+  <div class="sechead">
+    <div class="eyebrow">When to bump</div>
+    <h2>Versions</h2>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Rules</h3>
+      <ul>
+        <li><code>v01</code> → <code>v02</code> at every structural change — a layer lands, a section is added or cut.</li>
+        <li><code>v02b</code> for a mix alternative of the same structure.</li>
+        <li>Use <b>Save a Copy</b> so the project folder stays shared.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Readable history</h3>
+      <p style="font-size:.9rem">Live Sets are gzipped XML, so <code>git diff</code> can show what actually changed between versions once the textconv filter is on:</p>
+      <pre><code>git config diff.als.textconv 'gunzip -c'</code></pre>
+      <p style="font-size:.87rem;color:var(--ink2)">A renamed generated clip shows up as one line of XML — which is what makes the seeded naming scheme pay off.</p>
+    </div>
+  </div>
+</section>
+
+<section id="start">
+  <div class="sechead">
+    <div class="eyebrow">Two commands</div>
+    <h2>Starting a song</h2>
+  </div>
+  <pre><code><span class="c"># scaffold folders + SONG.md with the form table</span>
+tools/new-song.sh <span class="h">"Bisonte Club 2"</span> 124 <span class="h">"F minor"</span>
+
+<span class="c"># then, on Move: new Set named "Bisonte Club 2 L1 drummer" at 124 BPM</span>
+<span class="c"># L1 is the only part tracked with no bed — it is the first bed.</span></code></pre>
+  <p>After L1 is committed to Live, render <code>bed_v01.wav</code> into <code>Beds/</code>, push it to Move, and the loop from the Layer Stack Method takes over for L2 onward.</p>
+  <div class="callout ok">
+    <div class="eyebrow">Fill these in before tracking</div>
+    <p><code>SONG.md</code> ends with three blanks that are worth answering out loud: the <b>kick/bass relationship</b>, <b>what only this track has</b>, and the <b>reference record</b>. All three are cheap to decide now and expensive to discover at mix time.</p>
+  </div>
+</section>
+
+<footer>
+  Third companion to the <b>Move Field Guide</b>, <b>Move to Live Playbook</b> and <b>Layer Stack Method</b>. Form and folder skeleton are defaults — override per song in that song's <code>SONG.md</code>, deliberately and before tracking.
+</footer>
+</main>
+</div>

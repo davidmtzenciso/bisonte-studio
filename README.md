@@ -10,8 +10,10 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `Move Field Guide.html` | How Move talks to this machine — USB control surface vs Wi-Fi file API |
 | `Move to Live Playbook.html` | The overall cycle: sketch → sync → commit → mutate → arrange → render |
 | `Layer Stack Method.html` | Overdub method — one part at a time, played against a rendered bed |
+| `Song Template.html` | The default song shape — 104-bar form, layer participation grid, folder skeleton |
 | `SETUP.md` | Machine setup: paths, LOM/Max notes, Move Manager API reference |
 | `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull` (`push` pending) |
+| `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |
 | `tools/lomctl.js` | Max for Live device logic — the generative commands |
 | `tools/LOM Console.amxd` | The device shell; logic lives in `lomctl.js` |
 
@@ -44,6 +46,17 @@ files differ". Useful for seeing exactly what a generated clip changed.
 
 `.move-cookies.txt` (session credential), `*.ablbundle`, rendered audio,
 `Samples/`, `Renders/`, installed Packs. See `.gitignore`.
+
+## Starting a song
+
+```bash
+tools/new-song.sh "Bisonte Club 2" 124 "F minor"
+```
+
+Creates `<Song> Project/` under `/Volumes/Bisonte/Music Project/Bisonte/` with
+`Beds/`, `Parts/`, `Renders/{master,stems,seeds}` and a `SONG.md` carrying the
+104-bar form and a per-layer tracking log. Override the root with
+`BISONTE_PROJECTS`.
 
 ## Backlog
 
