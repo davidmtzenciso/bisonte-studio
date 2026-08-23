@@ -11,6 +11,7 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `Move to Live Playbook.html` | The overall cycle: sketch → sync → commit → mutate → arrange → render |
 | `Layer Stack Method.html` | Overdub method — one part at a time, played against a rendered bed |
 | `Song Template.html` | The default song shape — 104-bar form, layer participation grid, folder skeleton |
+| `Worked Example.html` | One song end to end in six sessions, with real commands and failure modes |
 | `SETUP.md` | Machine setup: paths, LOM/Max notes, Move Manager API reference |
 | `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull`, `push` |
 | `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |

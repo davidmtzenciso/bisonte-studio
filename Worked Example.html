@@ -1,0 +1,351 @@
+<title>Worked Example — Bisonte Club 2</title>
+<style>
+:root{
+  --bg:#f2f4f5; --panel:#ffffff; --panel2:#e9edef; --ink:#151a1e; --ink2:#4b565e; --ink3:#7b868d;
+  --line:#d5dbdf; --accent:#e0631f; --accent-ink:#9a3f0c; --accent-soft:#fbe9dd;
+  --ok:#2f8f5b; --ok-soft:#e3f2e9; --warn:#c98a12; --bad:#c43b2c; --bad-soft:#fae4e1;
+  --code-bg:#1b2126; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#8a959c;
+  --l1:#c4553c; --l2:#c08a2e; --l3:#3f8f63; --l4:#3d7ba8; --l5:#7a5f9e; --l6:#a8517a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+    --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+    --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f; --bad-soft:#3a1c18;
+    --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+    --l1:#e0765a; --l2:#e0a63a; --l3:#5cb684; --l4:#5d9dcb; --l5:#a081c4; --l6:#cd7aa0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111517; --panel:#191e22; --panel2:#20262b; --ink:#e7ebee; --ink2:#aeb8bf; --ink3:#7e8991;
+  --line:#2b3338; --accent:#f07a37; --accent-ink:#ffb27a; --accent-soft:#35221a;
+  --ok:#4fbd80; --ok-soft:#17301f; --warn:#e0a63a; --bad:#e5604f; --bad-soft:#3a1c18;
+  --code-bg:#0c0f11; --code-ink:#e6ebee; --code-hi:#ffb27a; --code-c:#7e8991;
+  --l1:#e0765a; --l2:#e0a63a; --l3:#5cb684; --l4:#5d9dcb; --l5:#a081c4; --l6:#cd7aa0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+a{color:var(--accent-ink)}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+code{background:var(--panel2);padding:.1em .35em;border-radius:3px;font-size:.9em}
+pre{background:var(--code-bg);color:var(--code-ink);padding:.9rem 1.1rem;border-radius:6px;overflow-x:auto;font-size:.8rem;line-height:1.6;margin:0}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .c{color:var(--code-c)} pre .h{color:var(--code-hi)} pre .g{color:#7fc79b}
+h1,h2,h3,h4{font-family:"Archivo",system-ui,sans-serif;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.05rem;font-weight:700}
+h4{font-size:.86rem;font-weight:700;font-family:"IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:1.1rem;max-width:68ch} li{margin:.2rem 0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.wrap{max-width:1180px;margin:0 auto;padding:2.5rem 1.5rem 5rem;display:grid;grid-template-columns:200px minmax(0,1fr);gap:3rem}
+nav{position:sticky;top:1.5rem;align-self:start;display:flex;flex-direction:column;gap:.35rem;font-size:.88rem}
+nav a{color:var(--ink2);text-decoration:none;padding:.25rem .5rem;border-left:2px solid var(--line)}
+nav a:hover,nav a:focus-visible{color:var(--ink);border-left-color:var(--accent);outline:none}
+main{display:flex;flex-direction:column;gap:3.5rem}
+header.hero{padding-bottom:2rem;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:1rem}
+.hero .meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;color:var(--ink2)}
+.hero .meta b{color:var(--ink);font-weight:600}
+section{display:flex;flex-direction:column;gap:1.25rem}
+.sechead{display:flex;flex-direction:column;gap:.35rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.1rem 1.3rem;display:flex;flex-direction:column;gap:.7rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:999px;border:1px solid var(--line);color:var(--ink2);vertical-align:middle}
+.chip.move{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.chip.live{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+kbd{font-family:"IBM Plex Mono",monospace;font-size:.82em;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .4em;background:var(--panel2)}
+.callout{border-left:3px solid var(--warn);background:var(--panel);padding:.85rem 1.05rem;border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:.3rem}
+.callout.bad{border-left-color:var(--bad)} .callout.ok{border-left-color:var(--ok)}
+.callout .eyebrow{color:inherit}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+th,td{text-align:left;padding:.5rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:500;background:var(--panel2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+/* session block */
+.sess{display:grid;grid-template-columns:5.2rem minmax(0,1fr);gap:1.3rem;border-top:1px solid var(--line);padding-top:1.5rem}
+.sess .rail{display:flex;flex-direction:column;gap:.25rem}
+.sess .no{font-family:"Archivo",sans-serif;font-weight:800;font-size:1.7rem;line-height:1;letter-spacing:-.03em;color:var(--sc,var(--accent))}
+.sess .dur{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink3)}
+.sess .sbody{display:flex;flex-direction:column;gap:.9rem;min-width:0}
+.sess h3{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.beat{display:flex;flex-direction:column;gap:.4rem}
+.out{display:inline-flex;align-items:center;gap:.5rem;font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ok);background:var(--ok-soft);border:1px solid var(--ok);border-radius:999px;padding:.2rem .7rem;align-self:flex-start}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:1rem}
+footer{color:var(--ink3);font-size:.8rem;border-top:1px solid var(--line);padding-top:1.5rem}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr;gap:1.5rem}
+  nav{position:static;flex-direction:row;flex-wrap:wrap}
+  nav a{border-left:0;border-bottom:2px solid var(--line)}
+  .sess{grid-template-columns:1fr;gap:.6rem}
+}
+</style>
+
+<div class="wrap">
+<nav>
+  <a href="#s0">0 · Scaffold</a>
+  <a href="#s1">1 · Drummer</a>
+  <a href="#s2">2 · Bassist</a>
+  <a href="#s3">3 · Rhythm + lead</a>
+  <a href="#s4">4 · Atmosphere</a>
+  <a href="#s5">5 · Arrange</a>
+  <a href="#s6">6 · Mix + feed back</a>
+  <a href="#wrong">What goes wrong</a>
+</nav>
+
+<main>
+<header class="hero">
+  <div class="eyebrow">Music Experiment · Bisonte</div>
+  <h1>Worked Example</h1>
+  <p>One song end to end — <b>Bisonte Club 2</b>, 124 BPM, F minor — as six sessions of about an hour. Commands are real and tested; the musical choices are illustrative, there to show <em>where</em> a decision belongs rather than what to decide.</p>
+  <div class="meta">
+    <div><b>Six sessions</b> ≈ 5h30 total</div>
+    <div><b>Six parts</b> L1–L6</div>
+    <div><b>Six beds</b> bed_v01–v06</div>
+    <div><b>2026-08-23</b></div>
+  </div>
+</header>
+
+<section id="s0">
+  <div class="sechead"><div class="eyebrow">Before any music</div><h2>Sessions</h2></div>
+
+  <div class="sess" style="--sc:var(--ink3)">
+    <div class="rail"><div class="no">0</div><div class="dur">2 min</div></div>
+    <div class="sbody">
+      <h3>Scaffold</h3>
+      <p>Two decisions, then one command. Tempo and key are the only things that can never change later, so they are the only things decided before playing.</p>
+      <pre><code><span class="c">$</span> tools/new-song.sh <span class="h">"Bisonte Club 2"</span> 124 <span class="h">"F minor"</span>
+
+<span class="g">created: /Volumes/Bisonte/Music Project/Bisonte/Bisonte Club 2 Project</span>
+
+  SONG.md            tempo 124, key F minor, form + tracking log
+  Beds/              bed_vNN.wav, 8 bars each
+  Parts/             layer bundles from Move
+  Renders/           master, stems, seeds
+
+next: track L1 on Move as "Bisonte Club 2 L1 drummer" at 124 BPM</code></pre>
+      <p style="font-size:.9rem;color:var(--ink2)">Open <code>SONG.md</code> and fill the <b>Reference record</b> line now, while you still have taste and no sunk cost. The other two decision lines get answered in sessions 1 and 2.</p>
+      <div class="out">→ Bisonte Club 2 Project/</div>
+    </div>
+  </div>
+
+  <div class="sess" style="--sc:var(--l1)">
+    <div class="rail"><div class="no">1</div><div class="dur">45 min</div></div>
+    <div class="sbody">
+      <h3>L1 · the drummer <span class="chip move">Move</span><span class="chip live">Live</span></h3>
+      <p>The only part played with nothing in the headphones. It <em>is</em> the first bed, so its groove is the song's groove — everything above inherits it.</p>
+
+      <div class="split">
+        <div class="card">
+          <h4>On Move · 30 min</h4>
+          <ul style="font-size:.9rem">
+            <li>New Set. <b>Name it first</b>: <code>Bisonte Club 2 L1 drummer</code>. The name becomes the bundle, the folder and the Live group.</li>
+            <li>Tempo <b>124</b>, scale <b>F minor</b> — matching <code>SONG.md</code> exactly.</li>
+            <li>Track 1 kick · 2 clap · 3 hats · 4 perc.</li>
+            <li>One off-grid element: nudge the clap a hair late, or a ghost hat at low velocity. Without it the loop will sound like a grid at bar 32.</li>
+            <li>Stay in <b>Standalone</b>. Nothing here needs the computer.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Then, on the Mac · 15 min</h4>
+          <pre><code><span class="c">$</span> cd ~/Music/Ableton/Move\ Sets
+<span class="c">$</span> python3 move-sync.py sets
+<span class="g">Bisonte Club 2 L1 drummer.ablbundle   4823104 bytes</span>
+
+<span class="c"># park the bundle with the song, not the inbox</span>
+<span class="c">$</span> mv "Bisonte Club 2 L1 drummer.ablbundle" \
+     "<span class="h">…/Bisonte Club 2 Project/Parts/</span>"</code></pre>
+          <ul style="font-size:.88rem;margin-top:.5rem">
+            <li>Double-click the bundle → Live opens it.</li>
+            <li><b>Save Live Set As</b> → <code>Bisonte Club 2 v01.als</code> in the project folder. This is the one-way door.</li>
+            <li>Group the four tracks as <code>L1 DRUMMER</code>. One Drum Rack = one instrument.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>Render the first bed</h4>
+        <p style="font-size:.9rem">Loop brace from <b>1.1.1 to 9.1.1</b> — eight bars exactly. Export: <b>Render Tail 0 ms</b>, 44.1 kHz, 16-bit, <b>Normalize off</b>. Save as <code>Beds/bed_v01.wav</code>.</p>
+        <pre><code><span class="c">$</span> cd "…/Bisonte Club 2 Project"
+<span class="c">$</span> python3 ~/Music/Ableton/"Move Sets"/move-sync.py \
+     push Beds/bed_v01.wav <span class="h">"Bisonte Club 2"</span> --tempo 124
+
+  mkdir  Samples/Bisonte
+  mkdir  Samples/Bisonte/Bisonte Club 2
+  put    bed_v01.wav        1365722 bytes  <span class="g">[8 bars ok]</span>
+
+-> Samples/Bisonte/Bisonte Club 2/</code></pre>
+        <p style="font-size:.88rem;color:var(--ink2)"><code>[8 bars ok]</code> is the gate passing. If it says <code>would drift</code>, the loop brace or the render tail was wrong — fix it now, because every part above L1 will be played against this file.</p>
+      </div>
+      <div class="out">→ v01.als · bed_v01.wav · on Move</div>
+    </div>
+  </div>
+
+  <div class="sess" style="--sc:var(--l2)">
+    <div class="rail"><div class="no">2</div><div class="dur">40 min</div></div>
+    <div class="sbody">
+      <h3>L2 · the bassist <span class="chip move">Move</span><span class="chip live">Live</span></h3>
+      <div class="callout">
+        <div class="eyebrow">Decide before you play</div>
+        <p>Does the bass <b>lock to the kick</b> or <b>play around it</b>? Write the answer in <code>SONG.md</code> → Decisions. If you can't answer it, the low end will fight itself and no amount of EQ at mix time fixes an indecisive part.</p>
+      </div>
+      <div class="split">
+        <div class="card">
+          <h4>On Move</h4>
+          <ul style="font-size:.9rem">
+            <li>New Set <code>Bisonte Club 2 L2 bassist</code>, tempo 124, F minor.</li>
+            <li><b>Track 1:</b> load <code>bed_v01.wav</code> from <code>Samples/Bisonte/Bisonte Club 2/</code> into a sampler and set it looping. This is your headphone mix.</li>
+            <li><b>Track 2:</b> the bass. Play it three times; keep the take with the best feel, not the cleanest.</li>
+            <li>Check the participation grid: bass is <b>off</b> in INTRO and BREAK. Don't write a line that only makes sense playing constantly.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>In Live</h4>
+          <ul style="font-size:.9rem">
+            <li><code>move-sync.py sets</code>, bundle → <code>Parts/</code>.</li>
+            <li>Open it, drag <b>track 2 only</b> into <code>Bisonte Club 2 v01.als</code>. <b>Delete the bed track</b> — it was scaffolding.</li>
+            <li>Group as <code>L2 BASSIST</code>, assign the instrument: Guitar and Bass, or Surge XT.</li>
+            <li>Save As <code>v02.als</code> — a part landed, so the version bumps.</li>
+            <li>Render <code>bed_v02.wav</code> (now L1+L2), push it.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="out">→ v02.als · bed_v02.wav</div>
+    </div>
+  </div>
+
+  <div class="sess" style="--sc:var(--l3)">
+    <div class="rail"><div class="no">3</div><div class="dur">70 min</div></div>
+    <div class="sbody">
+      <h3>L3 · rhythm, then L4 · lead <span class="chip move">Move</span></h3>
+      <p>Two Sets in one sitting. They go fast because the bed now carries drums and bass, so there is something real to play against.</p>
+      <div class="split">
+        <div class="card">
+          <h4>L3 rhythm · against bed_v02</h4>
+          <ul style="font-size:.9rem">
+            <li>Chords or a comping part. This fixes the key for everyone above.</li>
+            <li>Sits between bass and lead: <code>250 Hz – 2 kHz</code>. Don't write it low or it eats the bass.</li>
+            <li>In Live: Electric Keyboards or Expressive Chords. Render <code>bed_v03</code>, push.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>L4 lead · against bed_v03</h4>
+          <ul style="font-size:.9rem">
+            <li><b>Listen for where L3 is busy and play in the holes.</b> This is the one thing that is trivial with the bed and impossible without it.</li>
+            <li>The grid says the lead is silent for the first 48 bars — it enters at B. Write an entrance, not a loop.</li>
+            <li>Surge XT or Odin 2. Render <code>bed_v04</code>, push.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout ok">
+        <div class="eyebrow">Halfway checkpoint</div>
+        <p>Four parts, four beds, <code>v04.als</code>. Play <code>bed_v04</code> on its own: if it already sounds like a track rather than four loops stacked, the method is working. If it sounds crowded, you are about to find out why in session 5.</p>
+      </div>
+      <div class="out">→ v04.als · bed_v03, bed_v04</div>
+    </div>
+  </div>
+
+  <div class="sess" style="--sc:var(--l5)">
+    <div class="rail"><div class="no">4</div><div class="dur">50 min</div></div>
+    <div class="sbody">
+      <h3>L5 · atmosphere, and the first generative round <span class="chip live">Live</span></h3>
+      <div class="split">
+        <div class="card">
+          <h4>Atmosphere by resampling</h4>
+          <ul style="font-size:.9rem">
+            <li>Don't play something new. Render a bar of L1–L4, drop it into <b>Granulator III</b>, and stretch it into a pad. The texture then belongs to this song and no other.</li>
+            <li>Alternatives: Drone Lab, Inspired by Nature, Cardinal.</li>
+            <li>This is the one layer that plays throughout — it is the room, not a part.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Generators, first look</h4>
+          <ul style="font-size:.9rem">
+            <li>Try <b>Generators by Iftah</b> and <b>MIDI Tools by Philip Meyer</b> on the hat and bass clips before writing any <code>lomctl.js</code> command.</li>
+            <li>Keep ≤ 3 variants per part. A variant survives only if it plays back-to-back with the original without needing a fill.</li>
+            <li>Rename survivors by function — <code>hat A</code>, <code>hat A'</code> — not by seed.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="out">→ v05.als · bed_v05</div>
+    </div>
+  </div>
+
+  <div class="sess" style="--sc:var(--l6)">
+    <div class="rail"><div class="no">5</div><div class="dur">60 min</div></div>
+    <div class="sbody">
+      <h3>Arrange to 104 bars <span class="chip live">Live</span></h3>
+      <p>Everything so far has been eight-bar loops. This is where it becomes a song, and where the participation grid earns its place.</p>
+      <div class="card">
+        <h4>The order that works</h4>
+        <ul style="font-size:.9rem">
+          <li>Name seven scenes exactly as the form does: <code>INTRO · A · B · BREAK · B' · A' · OUTRO</code>.</li>
+          <li>Lay them out to the bar counts: 16, 16, 16, 8, 16, 16, 16.</li>
+          <li><b>Now go through the grid row by row and mute what should not be playing.</b> This is the "everybody rests" rule applied in one pass — expect to remove roughly a quarter of everything you recorded.</li>
+          <li>Build L6 last, against the arrangement: a riser into A, tension in the BREAK, fills through B'.</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <div class="eyebrow">Where it usually goes wrong</div>
+        <p>The song feels flat and the instinct is to add. It is almost always the <b>BREAK</b>: too long, too busy, or silently full because nothing was muted. B′ only lands if the eight bars before it took something away.</p>
+      </div>
+      <div class="out">→ v06.als, 104 bars</div>
+    </div>
+  </div>
+
+  <div class="sess" style="--sc:var(--accent)">
+    <div class="rail"><div class="no">6</div><div class="dur">60 min</div></div>
+    <div class="sbody">
+      <h3>Mix, render, feed Move <span class="chip live">Live</span><span class="chip move">Move</span></h3>
+      <div class="split">
+        <div class="card">
+          <h4>Mix</h4>
+          <ul style="font-size:.9rem">
+            <li>Against the REF track at matched loudness, LUFS meter on, limiter off until the end.</li>
+            <li>Low end first — the decision you wrote down in session 2 tells you whether to sidechain or carve.</li>
+            <li>One instrument per part governs <em>playing</em>, not mixing. Double and saturate freely here.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Render and close the loop</h4>
+          <pre><code><span class="c"># master + stems + seeds for the next song</span>
+Renders/master/  Bisonte Club 2 v06.wav
+Renders/stems/   L1…L6.wav
+Renders/seeds/   drums_8bar.wav, bass_stab.wav,
+                 texture.wav
+
+<span class="c">$</span> move-sync.py push Renders/seeds/*.wav <span class="h">"Bisonte Club 2"</span></code></pre>
+          <p style="font-size:.86rem;color:var(--ink2);margin-top:.5rem">No <code>--tempo</code> here: seeds are one-shots and odd-length loops, not beds, so the 8-bar gate would wrongly refuse them.</p>
+        </div>
+      </div>
+      <div class="out">→ finished track + seeds for Bisonte Club 3</div>
+    </div>
+  </div>
+</section>
+
+<section id="wrong">
+  <div class="sechead"><div class="eyebrow">Realistically</div><h2>What goes wrong the first time</h2></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Session</th><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><code>SKIP … would drift</code> on push</td><td>Loop brace not exactly 8 bars, or render tail &gt; 0</td><td>Re-render. The gate just saved you four sessions of drift.</td></tr>
+        <tr><td>1</td><td><code>Upload refused (HTTP 403)</code></td><td>Move left in Control Live</td><td>Setup → Standalone, push again</td></tr>
+        <tr><td>2</td><td>Bass and kick both feel weak</td><td>Relationship never decided</td><td>Pick one, re-play the part. Faster than fixing it in the mix.</td></tr>
+        <tr><td>3</td><td>Lead fights the chords</td><td>Played against <code>bed_v02</code> instead of <code>v03</code></td><td>Always regenerate the bed before the next part</td></tr>
+        <tr><td>5</td><td>Everything sounds crowded</td><td>Every part playing all 104 bars</td><td>The grid, applied honestly. Mute, don't add.</td></tr>
+        <tr><td>any</td><td><code>401 Unset credentials</code></td><td>30-day cookie expired</td><td>Rerun any command, type the code off Move's screen</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout bad">
+    <div class="eyebrow">One step not yet verified on hardware</div>
+    <p>Loading <code>bed_v01.wav</code> from <code>Samples/</code> onto a Move track and looping it is the hinge this whole method turns on, and it has not been done once yet. Prove it in session 2 before building four sessions on top of it — if Move won't loop an 8-bar sample cleanly on a track, the bed has to arrive some other way and the loop changes shape.</p>
+  </div>
+</section>
+
+<footer>
+  Fourth companion to the <b>Move Field Guide</b>, <b>Move to Live Playbook</b>, <b>Layer Stack Method</b> and <b>Song Template</b>. Commands tested 2026-08-23; musical choices illustrative. Timings are a first pass — the second song is always faster.
+</footer>
+</main>
+</div>
