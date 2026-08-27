@@ -28,7 +28,10 @@ import argparse, json, os, random, re, shutil, struct, subprocess, sys, urllib.p
 
 PACKS = os.environ.get(
     "BISONTE_PACKS", "/Volumes/Bisonte/Music Project/Ableton/Factory Packs")
-KITS = os.path.expanduser(os.environ.get("BISONTE_KITS", "~/Music/Ableton/Move Kits"))
+# Kits live inside the User Library so Live's browser can see them - the
+# BisonteKit remote script loads samples by walking browser.user_library.
+KITS = os.path.expanduser(
+    os.environ.get("BISONTE_KITS", "~/Music/Ableton/User Library/Move Kits"))
 CACHE = os.path.expanduser("~/.cache/bisonte/pack-index.json")
 
 MOVE_RATE = 44100

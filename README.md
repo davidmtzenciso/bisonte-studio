@@ -16,6 +16,7 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull`, `push` |
 | `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |
 | `tools/pack-picker.py` | Build 16-pad Move kits — stage pack samples for a Live preset export, or push plain audio straight to Move |
+| `tools/BisonteKit.py` | MIDI Remote Script — a JSON command channel into Live, the only route with browser access to load devices and samples |
 | `tools/lomctl.js` | Max for Live device logic — the generative commands |
 | `tools/LOM Console.amxd` | The device shell; logic lives in `lomctl.js` |
 
@@ -64,6 +65,29 @@ to 44.1 kHz by `afconvert` when needed.
 
 Kits land in `~/Music/Ableton/Move Kits/<name>/` with a `kit.json` and a
 `KIT.md` pad table. Same seed and same index rebuild the same kit.
+
+## Driving Live from outside
+
+The Live Object Model can create tracks, clips and notes and set parameters,
+but it cannot load a device or a sample — there is no such call. Only a MIDI
+Remote Script gets `Live.Browser`, which is how Push loads sounds.
+
+`tools/BisonteKit.py` is that script: it polls a JSON file and acts on it, so
+a shell can drive Live's browser.
+
+```bash
+ln -sfn "$PWD/tools/BisonteKit.py" \
+  ~/Music/Ableton/"User Library"/"Remote Scripts"/BisonteKit/__init__.py
+# Live only sees a new script at startup, then enable it under
+# Preferences > Link/Tempo/MIDI as a Control Surface.
+
+echo '{"cmd":"probe"}' > ~/Music/Ableton/"Move Kits"/_command.json
+echo '{"cmd":"build","kit":"<kit.json>"}' > ~/Music/Ableton/"Move Kits"/_command.json
+```
+
+Results land in `_result.json`, errors and tracebacks in `_bisontekit.log`,
+both next to the command file. Kits stage inside the User Library because the
+script finds samples by walking `browser.user_library`.
 
 ## Readable `.als` diffs
 
