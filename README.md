@@ -1,7 +1,11 @@
-# Bisonte — Move + Live studio
+# ableton toolkit
 
-Tooling and method docs for a Move → Live workflow. Audio, Sets and Packs are
-deliberately **not** tracked here; this repo is the code and the writing.
+Python utilities and Max for Live code for an Ableton Live 12 + Move studio,
+plus the method docs. `CLAUDE.md` is the working handoff: current state, the
+constraints that cost hours to find, and every command.
+
+Audio, Sets and Packs are deliberately **not** tracked here; this repo is the
+code and the writing.
 
 ## Contents
 
@@ -12,6 +16,7 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `Layer Stack Method.html` | Overdub method — one part at a time, played against a rendered bed |
 | `Song Template.html` | The default song shape — 104-bar form, layer participation grid, folder skeleton |
 | `Worked Example.html` | One song end to end in six sessions, with real commands and failure modes |
+| `CLAUDE.md` | Working handoff — state, hard-won constraints, command reference |
 | `SETUP.md` | Machine setup: paths, LOM/Max notes, Move Manager API reference |
 | `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull`, `push` |
 | `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |
