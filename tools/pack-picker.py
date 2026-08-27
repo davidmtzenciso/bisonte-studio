@@ -316,7 +316,10 @@ def stage(name, seed, packs=None, dry=False):
         src = os.path.join(item["root"], item["rel"])
         stem = safe(os.path.splitext(os.path.basename(item["rel"]))[0])[:48]
         link = "%d %s %s%s" % (note, role, stem, os.path.splitext(item["rel"])[1].lower())
-        os.symlink(src, os.path.join(outdir, link))
+        # Copy, don't symlink: Live's browser does not index symlinks, so a
+        # staged folder of links shows up empty both in Places and to
+        # browser.load_item. The bytes stay encrypted either way.
+        shutil.copyfile(src, os.path.join(outdir, link))
         pads.append({"note": note, "role": role, "file": link, "choke": CHOKE.get(note),
                      "source": item["rel"], "pack": item["pack"], "kind": "protected"})
     return outdir, pads

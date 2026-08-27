@@ -17,6 +17,7 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |
 | `tools/pack-picker.py` | Build 16-pad Move kits — stage pack samples for a Live preset export, or push plain audio straight to Move |
 | `tools/BisonteKit.py` | MIDI Remote Script — a JSON command channel into Live, the only route with browser access to load devices and samples |
+| `tools/BisonteKit_actions.py` | The commands themselves — re-read on every call, so edits need no Live restart |
 | `tools/lomctl.js` | Max for Live device logic — the generative commands |
 | `tools/LOM Console.amxd` | The device shell; logic lives in `lomctl.js` |
 
@@ -86,7 +87,12 @@ echo '{"cmd":"build","kit":"<kit.json>"}' > ~/Music/Ableton/"Move Kits"/_command
 ```
 
 Results land in `_result.json`, errors and tracebacks in `_bisontekit.log`,
-both next to the command file. Kits stage inside the User Library because the
+both next to the command file. `actions.py` is exec'd fresh per command,
+so only a change to `BisonteKit.py` itself needs Live restarted.
+
+**Live's browser does not index symlinks.** A staged folder of links reads
+as empty to both Places and `browser.load_item`, which is why `stage`
+copies. Verified: 0 items as links, 16 as copies. Kits stage inside the User Library because the
 script finds samples by walking `browser.user_library`.
 
 ## Readable `.als` diffs
