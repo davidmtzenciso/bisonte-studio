@@ -15,10 +15,16 @@ archive/
 Packs/
 Factory Packs/
 
-# --- Live project cruft ---
-Ableton Project Info/
+# --- Live sets & project cruft: this repo is code and writing ---
+*.als
 *.als.bak
+*.alp
+*.ablpresetbundle
+*.adg
+*.adv
+Ableton Project Info/
 Backup/
+* Project/
 
 # --- os ---
 .DS_Store
