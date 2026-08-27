@@ -15,6 +15,7 @@ deliberately **not** tracked here; this repo is the code and the writing.
 | `SETUP.md` | Machine setup: paths, LOM/Max notes, Move Manager API reference |
 | `tools/move-sync.py` | Move Manager client — `list`, `sets`, `pull`, `push` |
 | `tools/new-song.sh` | Scaffold a song project: folders + `SONG.md` with the form table |
+| `tools/pack-picker.py` | Build 16-pad Move kits — stage pack samples for a Live preset export, or push plain audio straight to Move |
 | `tools/lomctl.js` | Max for Live device logic — the generative commands |
 | `tools/LOM Console.amxd` | The device shell; logic lives in `lomctl.js` |
 
@@ -31,6 +32,38 @@ ln -sf "$PWD/tools/lomctl.js" \
 
 `lomctl.js` hot-reloads on save (`autowatch = 1`), so editing it in the repo
 reloads the device live.
+
+## Factory Packs on Move
+
+Live Packs cannot be used on Move, and the samples inside them are not a way
+around that: 10,378 of the 10,889 `.aif` files in `Factory Packs/` are AIFF-C
+with Ableton's `able` compression, which only Live can decode. CoreAudio will
+not open one, so neither will Move. The 511 plain files are Convolution Reverb
+impulse responses; the `.ogg` files are browser preview thumbnails.
+
+Move's own API states the terms — `OPTIONS /api/v1/files/Samples/` answers
+`.wav, .wave, .aif, .aiff, .aifc`, 100 MB per file, and `Track Presets/`
+answers `.ablpresetbundle`. Uploading an encrypted `.aif` succeeds and stores
+undecodable bytes, so "the upload worked" proves nothing.
+
+Two real routes, both driven by `pack-picker.py`:
+
+```bash
+tools/pack-picker.py scan                       # index, plain vs Live-only
+tools/pack-picker.py stage "Club Kit" --seed 7  # 16 pack samples, symlinked in pad order
+#   drag them into a Drum Rack in Live, File > Export Preset
+tools/pack-picker.py preset "Club Kit.ablpresetbundle"
+
+tools/pack-picker.py build "Club Kit" --from Renders/seeds --push
+```
+
+The first is Ableton's supported path (Live 12.1+): Live decodes the pack
+audio and embeds it in the bundle, downsampled to 44.1 kHz. The second is for
+audio we own outright — renders, Move recordings, our own samples — converted
+to 44.1 kHz by `afconvert` when needed.
+
+Kits land in `~/Music/Ableton/Move Kits/<name>/` with a `kit.json` and a
+`KIT.md` pad table. Same seed and same index rebuild the same kit.
 
 ## Readable `.als` diffs
 

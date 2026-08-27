@@ -127,7 +127,7 @@ def ensure_dir(enc_parts):
             listdir(branch)
             continue                                   # already there
         except urllib.error.HTTPError as e:
-            if e.code != 404:
+            if e.code not in (400, 404):        # Move answers 400 for "no such path"
                 raise
         call("/api/v1/files/" + "/".join(branch) + "/", method="POST", raw=True)
         print("  mkdir  %s" % urllib.parse.unquote("/".join(branch)))
@@ -146,8 +146,9 @@ def post_file(enc_parts, local_path):
         blob,
         ("\r\n--%s--\r\n" % boundary).encode(),
     ])
-    url = "%s/api/v1/files/%s/%s?overwrite=true" % (
-        HOST, "/".join(enc_parts), urllib.parse.quote(name))
+    # POST to the DIRECTORY - the multipart part already carries the filename.
+    # Posting to the file path makes Move treat the name as a folder and 400.
+    url = "%s/api/v1/files/%s/?overwrite=true" % (HOST, "/".join(enc_parts))
     req = urllib.request.Request(
         url, data=body, method="POST",
         headers={"Accept": "application/json, */*",
