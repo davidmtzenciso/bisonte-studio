@@ -20,7 +20,7 @@ import traceback
 
 import Live
 
-VERSION = 2
+VERSION = 4
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ACTIONS = os.path.join(HERE, "actions.py")
@@ -43,7 +43,15 @@ def log(msg):
 
 
 def create_instance(c_instance):
-    return BisonteKit(c_instance)
+    # Log before anything that can throw, and capture the traceback if the
+    # constructor fails - a silent failure here looks identical to "Live
+    # never called us", which costs a restart to tell apart.
+    log("create_instance - core v%d" % VERSION)
+    try:
+        return BisonteKit(c_instance)
+    except Exception:
+        log("create_instance FAILED:\n%s" % traceback.format_exc())
+        raise
 
 
 class BisonteKit(object):
@@ -52,8 +60,12 @@ class BisonteKit(object):
     def __init__(self, c_instance):
         self._c_instance = c_instance
         self._tick = 0
-        log("loaded v%d - Live %s"
-            % (VERSION, Live.Application.get_application().get_version_string()))
+        self._announced = False
+        try:
+            version = Live.Application.get_application().get_version_string()
+        except Exception as e:
+            version = "unknown (%s)" % e
+        log("loaded v%d - Live %s" % (VERSION, version))
 
     # ---- the interface Live expects ------------------------------------
     def disconnect(self):
@@ -87,6 +99,9 @@ class BisonteKit(object):
         pass
 
     def update_display(self):
+        if not self._announced:                 # proof the poll loop runs
+            self._announced = True
+            log("polling")
         self._tick += 1
         if self._tick % POLL_TICKS:
             return
