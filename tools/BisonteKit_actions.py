@@ -5,7 +5,7 @@ take effect without restarting Live.
 Names provided by the caller: Live, log, os, json, BASE.
 """
 
-VERSION = 3
+VERSION = 4
 
 
 def children_of(item):
@@ -67,6 +67,14 @@ def run(command):
         return cells(command)
     if name == "delete_track":
         return delete_track(command)
+    if name == "inputs":
+        return inputs(command)
+    if name == "rec":
+        return rec(command)
+    if name == "levels":
+        return levels(command)
+    if name == "track_set":
+        return track_set(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -255,3 +263,187 @@ def build(command):
             "replaced": replaced, "placed": placed, "missing": missing,
             "loaded_via": routes,
             "note_range": [min(filled(rack)), max(filled(rack))] if filled(rack) else []}
+
+
+def _routing_names(items):
+    out = []
+    for item in items:
+        try:
+            out.append(item.display_name)
+        except Exception:
+            continue
+    return out
+
+
+def inputs(command):
+    """Report the input routings Live currently offers, per audio track.
+
+    The lists come from Live's active audio input device, so they only
+    show MR18 channels once the mixer's USB cable is in AND Live's audio
+    input device is set to it. Choosing that device is NOT scriptable --
+    it is an application preference, not part of the LOM -- so it stays a
+    manual step in Live's Settings -> Audio.
+    """
+    song = song_of()
+    tracks = []
+    for track in song.tracks:
+        try:
+            if not track.has_audio_input:
+                continue
+        except Exception:
+            continue
+        row = {"name": track.name}
+        try:
+            row["type"] = track.input_routing_type.display_name
+            row["channel"] = track.input_routing_channel.display_name
+            row["available_types"] = _routing_names(
+                track.available_input_routing_types)
+            row["available_channels"] = _routing_names(
+                track.available_input_routing_channels)
+        except Exception as e:
+            row["error"] = str(e)
+        tracks.append(row)
+    return {"ok": True, "actions_version": VERSION, "audio_tracks": tracks}
+
+
+def rec(command):
+    """Point an audio track at one hardware input and arm it.
+
+    {"cmd":"rec","name":"Ch2","type":"MR18","channel":"2","arm":true}
+
+    `type` is matched case-insensitively as a substring, because the
+    device's spelling varies (MR18 / X-AIR / MR18 USB). `channel` is
+    matched exactly first, then as a substring, so "2" cannot silently
+    land on "12". Monitoring is left at Live's default on purpose: the
+    user is usually wearing the headphones.
+    """
+    song = song_of()
+    title = command.get("name") or "Rec"
+    want_type = (command.get("type") or "").lower()
+    want_chan = str(command.get("channel") or "")
+
+    track = track_named(title)
+    created = False
+    if track is None:
+        song.create_audio_track(-1)
+        track = song.tracks[len(song.tracks) - 1]
+        try:
+            track.name = title
+        except Exception:
+            pass
+        created = True
+
+    chose = {}
+    missed = {}
+
+    if want_type:
+        hit = None
+        for t in track.available_input_routing_types:
+            if want_type in t.display_name.lower():
+                hit = t
+                break
+        if hit is None:
+            missed["type"] = _routing_names(
+                track.available_input_routing_types)
+        else:
+            track.input_routing_type = hit
+            chose["type"] = hit.display_name
+
+    if want_chan:
+        avail = list(track.available_input_routing_channels)
+        hit = None
+        for c in avail:                      # exact first
+            if c.display_name.strip().lower() == want_chan.strip().lower():
+                hit = c
+                break
+        if hit is None:                      # then substring
+            for c in avail:
+                if want_chan.lower() in c.display_name.lower():
+                    hit = c
+                    break
+        if hit is None:
+            missed["channel"] = _routing_names(avail)
+        else:
+            track.input_routing_channel = hit
+            chose["channel"] = hit.display_name
+
+    armed = None
+    if command.get("arm"):
+        try:
+            track.arm = 1
+            armed = bool(track.arm)
+        except Exception as e:
+            missed["arm"] = str(e)
+
+    return {"ok": not missed, "actions_version": VERSION,
+            "track": title, "created": created, "chose": chose,
+            "armed": armed, "unmatched_wanted": missed,
+            "now": {"type": track.input_routing_type.display_name,
+                    "channel": track.input_routing_channel.display_name}}
+
+
+def levels(command):
+    """One instantaneous meter + monitoring reading per audio track.
+
+    Deliberately NOT a loop: actions run on Live's own thread, so
+    sleeping here would stall the application. Call it repeatedly from
+    outside to watch a level over time.
+
+    current_monitoring_state: 0 = In, 1 = Auto, 2 = Off. An armed track
+    on Auto IS monitoring its input, which for a live mic means it is
+    already in the monitor path.
+    """
+    rows = []
+    for track in song_of().tracks:
+        try:
+            if not track.has_audio_input:
+                continue
+        except Exception:
+            continue
+        row = {"name": track.name}
+        for attr in ("arm", "current_monitoring_state",
+                     "input_meter_level", "output_meter_level"):
+            try:
+                row[attr] = getattr(track, attr)
+            except Exception:
+                row[attr] = None
+        rows.append(row)
+    return {"ok": True, "actions_version": VERSION, "tracks": rows}
+
+
+def track_set(command):
+    """Set arm / monitoring / volume on one track by name.
+
+    {"cmd":"track_set","name":"Ch2 Mic","monitor":0,"volume":0.0}
+
+    monitor: 0 = In, 1 = Auto, 2 = Off.
+
+    Volume is applied BEFORE monitoring so a track can be silenced first
+    and only then opened up - the input meter is pre-fader, so signal can
+    be verified without putting a live mic into somebody's headphones.
+    """
+    track = track_named(command.get("name", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("name")}
+    done = {}
+    if "volume" in command:
+        try:
+            track.mixer_device.volume.value = float(command["volume"])
+            done["volume"] = track.mixer_device.volume.value
+        except Exception as e:
+            done["volume_error"] = str(e)
+    if "monitor" in command:
+        try:
+            track.current_monitoring_state = int(command["monitor"])
+            done["monitor"] = track.current_monitoring_state
+        except Exception as e:
+            done["monitor_error"] = str(e)
+    if "arm" in command:
+        try:
+            track.arm = 1 if command["arm"] else 0
+            done["arm"] = bool(track.arm)
+        except Exception as e:
+            done["arm_error"] = str(e)
+    return {"ok": True, "actions_version": VERSION,
+            "track": track.name, "applied": done}
