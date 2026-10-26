@@ -15,8 +15,14 @@ The mixer answers on udp/10024. Ethernet is control only - audio is USB.
 Host defaults to $MR18_HOST, else whatever `probe` finds.
 
 Quirks that cost hours, kept here so they stay fixed:
-  - headamp indices are 1-based: /headamp/01 .. /headamp/18. /headamp/00
-    does not exist and silently times out. Input 11 is /headamp/11.
+  - headamp indices are 1-based and stop at 16: /headamp/01 .. /headamp/16.
+    /headamp/00 does not exist and silently times out. Worse, ANY index
+    above 16 answers with a single bogus 0.375 (+15 dB) instead of
+    nothing, so trust a reply only when it carries two values,
+    [gain, phantom]. Input 11 is /headamp/11.
+  - there is no /ch/17 or /ch/18. 16 mono channels, then a stereo aux
+    return (/rtn/aux) and two FX returns (/rtn/1, /rtn/2), all line
+    level with no preamp.
   - /meters/1 is PRE-gain, so it reads 20-30 dB below the M AIR Edit meters
     and does not move when headamp gain changes.
   - the phones jack follows the monitor bus and cannot be rerouted; a
@@ -105,6 +111,19 @@ def headamp_db(f):
     return f * 72 - 12
 
 
+def fmt_db(x):
+    """One decimal, signed, with no '-0.0'.
+
+    Unity arrives as the float32 nearest 0.75 (0.74975...), so the taper
+    yields a hair below zero and a plain format prints '-0.0 dB' for a
+    fader sitting exactly on unity.
+    """
+    v = round(x, 1)
+    if v == 0:
+        v = 0.0
+    return f"{v:+.1f}"
+
+
 # ----------------------------------------------------------------- transport
 
 class MR18:
@@ -129,21 +148,34 @@ class MR18:
                 return v
         return None
 
-    def ask_many(self, addrs):
-        """Fire every request, then collect - one timeout for the whole batch."""
-        for a in addrs:
-            self.send(a)
+    def ask_many(self, addrs, rounds=4):
+        """Fire every request, collect, then re-ask whatever stayed silent.
+
+        Two reasons this is not a single pass. The mixer drops OSC when
+        flooded, so the sends are paced; and a reply lost in transit would
+        otherwise print as "-" in a state table, reading as "this channel
+        does not exist" when the value was merely lost - the same kind of
+        misreport as a blocked probe looking like a dead mixer.
+        """
+        want = list(dict.fromkeys(addrs))
         out = {}
-        misses = 0
-        while len(out) < len(addrs) and misses < 4:
-            try:
-                data, _src = self.s.recvfrom(8192)
-            except socket.timeout:
-                misses += 1
-                continue
-            a, v = decode(data)
-            if a in addrs and a not in out:
-                out[a] = v
+        for _ in range(rounds):
+            missing = [a for a in want if a not in out]
+            if not missing:
+                break
+            for a in missing:
+                self.send(a)
+                time.sleep(0.002)
+            misses = 0
+            while len(out) < len(want) and misses < 2:
+                try:
+                    data, _src = self.s.recvfrom(8192)
+                except socket.timeout:
+                    misses += 1
+                    continue
+                a, v = decode(data)
+                if a in want and a not in out:
+                    out[a] = v
         return out
 
 
@@ -377,23 +409,47 @@ def cmd_info(host):
 
 
 def cmd_state(host):
+    """Faders, gains and mutes for the 16 inputs and the three returns.
+
+    There is no /ch/17 or /ch/18: the MR18 has 16 mono channels, a stereo
+    aux return (/rtn/aux, no preamp) and two FX returns (/rtn/1, /rtn/2).
+    Nor is there a /headamp/17 - the firmware answers ANY out-of-range
+    index with a single bogus 0.375 (+15 dB), so an index is only real
+    when the reply carries two values, [gain, phantom].
+    """
     m = MR18(host)
-    chans = [f"{i:02d}" for i in range(1, 19)]
-    faders = m.ask_many([f"/ch/{c}/mix/fader" for c in chans])
-    mutes = m.ask_many([f"/ch/{c}/mix/on" for c in chans])
-    gains = m.ask_many([f"/headamp/{c}" for c in chans])
-    phantom = m.ask_many([f"/headamp/{c}/phantom" for c in chans])
-    print(f"{'ch':>3}  {'fader':>14}  {'gain':>9}  {'48V':>4}  state")
+    chans = [f"{i:02d}" for i in range(1, 17)]
+    rtns = [("aux", "/rtn/aux"), ("fx1", "/rtn/1"), ("fx2", "/rtn/2")]
+
+    faders = m.ask_many([f"/ch/{c}/mix/fader" for c in chans]
+                        + [f"{p}/mix/fader" for _n, p in rtns])
+    mutes = m.ask_many([f"/ch/{c}/mix/on" for c in chans]
+                       + [f"{p}/mix/on" for _n, p in rtns])
+    heads = m.ask_many([f"/headamp/{c}" for c in chans])
+
+    print(f"{'ch':>4}  {'fader':>15}  {'gain':>9}  {'48V':>4}  state")
     for c in chans:
         f = faders.get(f"/ch/{c}/mix/fader")
-        g = gains.get(f"/headamp/{c}")
+        h = heads.get(f"/headamp/{c}")
         on = mutes.get(f"/ch/{c}/mix/on")
-        ph = phantom.get(f"/headamp/{c}/phantom")
-        fs = f"{f[0]:.3f} = {fader_db(f[0]):+6.1f} dB" if f else "       -"
-        gs = f"{headamp_db(g[0]):+6.1f} dB" if g else "    -"
-        ps = ("on" if ph[0] else "-") if ph else "?"
+        fs = f"{f[0]:.3f} = {fmt_db(fader_db(f[0])):>7} dB" if f else "-"
+        # a real headamp replies [gain, phantom]; one value means the
+        # index does not exist and the firmware made something up
+        if h and len(h) >= 2:
+            gs = f"{fmt_db(headamp_db(h[0])):>6} dB"
+            ps = "on" if h[1] else "-"
+        else:
+            gs, ps = "-", "-"
         st = ("ON" if on[0] else "MUTED") if on else "?"
-        print(f"{int(c):>3}  {fs:>14}  {gs:>9}  {ps:>4}  {st}")
+        print(f"{int(c):>4}  {fs:>15}  {gs:>9}  {ps:>4}  {st}")
+
+    for name, path in rtns:
+        f = faders.get(f"{path}/mix/fader")
+        on = mutes.get(f"{path}/mix/on")
+        fs = f"{f[0]:.3f} = {fmt_db(fader_db(f[0])):>7} dB" if f else "-"
+        st = ("ON" if on[0] else "MUTED") if on else "?"
+        print(f"{name:>4}  {fs:>15}  {'-':>9}  {'-':>4}  {st}")
+    print("# aux and fx returns are line level - no preamp to report")
 
 
 def cmd_monitor(host):
@@ -436,9 +492,9 @@ def cmd_get(addr, host):
     out = [f"{x:.4f}" if isinstance(x, float) else str(x) for x in v]
     line = f"{addr}  {' '.join(out)}"
     if addr.endswith("/fader") and isinstance(v[0], float):
-        line += f"   = {fader_db(v[0]):+.1f} dB"
+        line += f"   = {fmt_db(fader_db(v[0]))} dB"
     elif re.fullmatch(r"/headamp/\d\d", addr) and isinstance(v[0], float):
-        line += f"   = {headamp_db(v[0]):+.1f} dB"
+        line += f"   = {fmt_db(headamp_db(v[0]))} dB"
     print(line)
 
 
