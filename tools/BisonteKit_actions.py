@@ -91,6 +91,8 @@ def run(command):
         return midi_track(command)
     if name == "surfaces":
         return surfaces(command)
+    if name == "song_info":
+        return song_info(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -697,3 +699,32 @@ def surfaces(command):
                 pass
         rows.append(row)
     return {"ok": True, "actions_version": VERSION, "surfaces": rows}
+
+
+def song_info(command):
+    """What document is open, and is saving reachable from the LOM?
+
+    Live deliberately exposes very little about the document on disk, so
+    this reports what it actually finds rather than assuming.
+    """
+    app = Live.Application.get_application()
+    song = song_of()
+    out = {"ok": True, "actions_version": VERSION}
+    for obj, label in ((song, "song"), (app, "app")):
+        names = [a for a in dir(obj) if not a.startswith("__")]
+        out[label + "_save_like"] = sorted(
+            n for n in names
+            if any(k in n.lower() for k in
+                   ("save", "file", "path", "name", "document", "export")))
+    for attr in ("file_path", "name", "document_name"):
+        try:
+            out["song_" + attr] = str(getattr(song, attr))
+        except Exception:
+            pass
+    try:
+        out["live_version"] = "%d.%d.%d" % (
+            app.get_major_version(), app.get_minor_version(),
+            app.get_bugfix_version())
+    except Exception:
+        pass
+    return out

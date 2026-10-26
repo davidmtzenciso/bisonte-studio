@@ -32,17 +32,28 @@ Done and verified against real hardware:
   writing Euclidean patterns into the selected empty clip slot. Buttons added to the
   device. **Not yet run inside Live** — logic is node-tested only.
 - **`move-sync.py`** — pulls Sets, lists Move's storage, and now genuinely uploads
-  (two bugs fixed, see below). Cookie valid ~30 days from 2026-08-20.
+  (two bugs fixed, see below). **Cookie expired ~2026-09-19** and re-pairing has
+  not succeeded since: `/api/v1/challenge` returned HTTP 500 on 2026-10-26 even
+  with Move in Standalone and its API answering 200. Pair before switching to
+  Control Live — the manual says an authenticated session survives the switch.
 - **`pack-picker.py`** — indexes the packs, picks 16 one-shots onto a pad layout,
   stages or builds a kit, pushes samples or a preset bundle.
-- **`BisonteKit`** — MIDI Remote Script, a JSON command channel into Live. Currently
-  loaded and answering (`{"cmd":"ping"}` → `actions_version: 3`).
+- **`mr18.py`** — reads and controls the Midas MR18 over OSC/UDP 10024.
+  `probe`, `scan`, `info`, `state`, `monitor`, `meters`, `get`, `set`.
+- **`BisonteKit`** — MIDI Remote Script, a JSON command channel into Live.
+  Loaded and answering `actions_version: 4` (2026-10-26).
 - **Death Valley kit** — 16 pads built by script in Live on notes 36–51, Drum Sampler
-  cells, chokes on 42/44/46. Track named `Death Valley` in the open set.
+  cells, chokes on 42/44/46. Track named `Death Valley`.
+  **It IS saved**, as `Death Valley/death_valley_1 Project/Untitled.als`
+  (27 Aug 11:50) — Live's default filename, not an unsaved set. The older
+  `death_valley_1.als` (26 Aug) holds the same 16 DrumCells but under the stale
+  track name `Bisonte Club Kit`, so **`Untitled.als` is the one to open.**
 
 Immediate next steps, in order:
 
-1. In Live: **save the set** (the built `Death Valley` track is unsaved).
+1. In Live: open `Untitled.als` (above) and **Save As `death_valley_1`** to
+   consolidate onto the name the project uses. Overwriting in that direction is
+   safe — the target is the older, staler file. The reverse destroys the kit.
 2. Select the Drum Rack → **⌘G** to wrap it in an Instrument Rack → add one
    **Saturator** after the Drum Rack inside that rack. This mirrors the factory
    `Bisonte Club 1` structure Move expects.
@@ -100,6 +111,34 @@ happily** — a successful upload proves nothing about playability. Move answers
 `move.local` resolves through it. It takes a few seconds to come up; a first failed
 request means wait, not broken. Wi-Fi is optional.
 
+**Move sends NO MIDI in Standalone Mode.** Its pads drive its internal engine and
+nothing leaves the device — measured 2026-10-26: 445 messages over two minutes,
+every one of them `0xFE` Active Sensing, on all four ports. It still *receives*
+MIDI and plays it, so a working "it makes sound" test proves nothing about
+output. **Switch to Control Live Mode**: hold **`•••`** (bottom-right, right of
+Undo — it is NOT labelled "Shift") and press **Step 2** (gear icon, 2nd of the 16
+bottom buttons) → wheel to `Control Live` → press wheel. Double-press `•••` to
+lock it. The entry then reads `Standalone` to switch back.
+
+**Do not use `en10` or the Move API to detect the mode** — both stay up in
+Control Live (the manual only says Move *Manager* is inaccessible). Monitoring
+raw MIDI is the only reliable test.
+
+**In Control Live, Move is a control surface, not a keyboard.** It disarms the
+MIDI tracks, manages arming itself, and creates its own clips. What arrives is
+its control layer (pitches 87–96 at velocity 1), not playable notes — press
+**`≡`** (left, beside Back) for Note Mode to get real pitches.
+
+**CoreMIDI shows four Move ports; Live shows three.** The *User Port* is missing
+from Live's routing list. Nothing arrives on it either, so it is not the cause of
+a silent Move, but it rules the port out as a workaround.
+
+**macOS has no built-in MIDI monitor.** `python-rtmidi` in a throwaway venv is
+the only way to see what a device actually transmits, independent of Live — and
+Live being in the loop is what made this take hours. Remember to pass
+`ignore_types(active_sense=False)` first to confirm the link, then filter it back
+out so real data is visible.
+
 **`move-sync.py` had two never-tested upload bugs** (fixed, commit 889ec83):
 `post_file` posted to the file path, so Move treated the filename as a folder (400) —
 POST to the *directory*, the multipart part carries the filename. And `ensure_dir`
@@ -127,27 +166,64 @@ python3 tools/pack-picker.py roles              # availability per pad role
 python3 tools/pack-picker.py stage "Death Valley" --seed 7   # 16 pack samples -> User Library
 python3 tools/pack-picker.py build "Kit" --from Renders/seeds --push   # plain audio -> Move
 python3 tools/pack-picker.py preset "Kit.ablpresetbundle"    # -> Move Track Presets
+
+# --- Midas MR18 mixer over OSC (ethernet is control only; audio is USB) ---
+tools/mr18.py probe                 # broadcast discovery, per-interface
+tools/mr18.py scan                  # unicast sweep of each local /24
+tools/mr18.py state   <host>        # faders, gains, phantom, mutes
+tools/mr18.py meters  <host>        # /meters/1, PRE-gain, per physical jack
+tools/mr18.py get /headamp/02 <host>
+tools/mr18.py set /headamp/02 0.5833 <host>    # 0.5833 = +30 dB
 ```
+
+**Find the MR18 by ARP, not broadcast.** It ignores `/info` sent to
+`169.254.255.255` but answers ARP: check `en5` is `status: active` first, then
+`arp -an | grep en5` and look for `73:c3:d8`. Its link-local address changes
+between sessions. A DHCP lease on `en5` means the cable is in the router, not
+the mixer.
 
 ### Driving Live
 
 ```bash
 B=~/Music/Ableton/"Move Kits"
-echo '{"cmd":"ping"}'  > "$B/_command.json"          # -> {"ok":true,"actions_version":3}
+echo '{"cmd":"ping"}'  > "$B/_command.json"          # -> {"ok":true,"actions_version":4}
 echo '{"cmd":"probe"}' > "$B/_command.json"          # browser API surface + tracks
 python3 -c 'import json;print(json.dumps({"cmd":"build","kit":"<kit.json>","name":"Death Valley"}))' > "$B/_command.json"
 echo '{"cmd":"cells","track":"Death Valley"}' > "$B/_command.json"
 echo '{"cmd":"delete_track","track":"Bisonte Club Kit"}' > "$B/_command.json"
+
+# recording and routing (v4)
+echo '{"cmd":"song_info"}'   > "$B/_command.json"    # which .als is open; is it saved
+echo '{"cmd":"inputs"}'      > "$B/_command.json"    # audio track routing + what Live offers
+echo '{"cmd":"midi_inputs"}' > "$B/_command.json"    # same for MIDI tracks
+echo '{"cmd":"surfaces"}'    > "$B/_command.json"    # which control surface slots are filled
+echo '{"cmd":"rec","name":"Ch2 Mic","type":"Ext. In","channel":"2","arm":true}' > "$B/_command.json"
+echo '{"cmd":"levels"}'      > "$B/_command.json"    # meters + monitoring, one shot per call
+echo '{"cmd":"fire","track":"Ch2 Mic","slot":0}' > "$B/_command.json"   # start recording
+echo '{"cmd":"transport","action":"stop"}' > "$B/_command.json"
+echo '{"cmd":"clips","track":"Ch2 Mic"}' > "$B/_command.json"           # incl. file_path on disk
+echo '{"cmd":"clip_notes","track":"1-MIDI","slot":0}' > "$B/_command.json"
+echo '{"cmd":"track_set","name":"Ch2 Mic","monitor":2,"volume":0.85}' > "$B/_command.json"
 # then read "$B/_result.json"; errors and tracebacks in "$B/_bisontekit.log"
 ```
+
+**Live's own settings are not in the LOM.** The audio input device, the MIDI
+port Track/Sync/Remote switches, and **saving the set** are application
+preferences — no script can touch them, and `song.file_path` / `song.name` are
+read-only (empty string means the set was never saved). Everything downstream
+of those — tracks, routing, arming, transport, clips — is scriptable.
+
+`surfaces` reports which slots are *occupied*, not whether a surface's MIDI
+ports are bound: BisonteKit itself sits in a slot with no MIDI port at all.
+Port assignments live in `Preferences.cfg`, which is binary.
 
 `actions.py` is exec'd fresh on every command — edit it freely, no restart. Only a
 change to `BisonteKit.py` (the polling core) needs Live restarted, and Live only scans
 for control surfaces at startup. It is enabled in **Settings → Link, Tempo & MIDI**,
 slot 2 (macOS calls it Settings, not Preferences). Slot 1 holds Move — leave it.
 
-Note: `tools/BisonteKit.py` on disk is **v4**; Live is running **v2**. The difference
-is only defensive logging. It will pick up v4 on the next restart.
+Note: Live is now running `BisonteKit.py` **v4** — it picked it up on a restart.
+Live 12.4.1 as of 2026-10-26.
 
 ## Conventions
 
