@@ -93,6 +93,10 @@ def run(command):
         return surfaces(command)
     if name == "song_info":
         return song_info(command)
+    if name == "outputs":
+        return outputs(command)
+    if name == "route_out":
+        return route_out(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -728,3 +732,80 @@ def song_info(command):
     except Exception:
         pass
     return out
+
+
+def outputs(command):
+    """Report each track's OUTPUT routing ("MIDI To" / "Audio To").
+
+    The input commands cover MIDI From; this is the other direction -
+    what a track sends to. Sending notes to Move's own engine needs this,
+    not input routing.
+    """
+    rows = []
+    for track in song_of().tracks:
+        row = {"name": track.name}
+        try:
+            row["midi"] = bool(track.has_midi_input)
+        except Exception:
+            pass
+        try:
+            row["to_type"] = track.output_routing_type.display_name
+            row["to_channel"] = track.output_routing_channel.display_name
+            row["available_types"] = _routing_names(
+                track.available_output_routing_types)
+            row["available_channels"] = _routing_names(
+                track.available_output_routing_channels)
+        except Exception as e:
+            row["error"] = str(e)
+        rows.append(row)
+    return {"ok": True, "actions_version": VERSION, "tracks": rows}
+
+
+def route_out(command):
+    """Set a track's MIDI To / Audio To by display name.
+
+    {"cmd":"route_out","name":"1-MIDI","type":"Standalone","channel":"Ch. 1"}
+
+    Type is matched as a substring; channel exactly first, then as a
+    substring, same rule as rec() so "1" cannot land on "11".
+    """
+    track = track_named(command.get("name", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("name")}
+    want_t = (command.get("type") or "").lower()
+    want_c = str(command.get("channel") or "")
+    chose, missed = {}, {}
+    if want_t:
+        hit = None
+        for t in track.available_output_routing_types:
+            if want_t in t.display_name.lower():
+                hit = t
+                break
+        if hit is None:
+            missed["type"] = _routing_names(
+                track.available_output_routing_types)
+        else:
+            track.output_routing_type = hit
+            chose["type"] = hit.display_name
+    if want_c:
+        avail = list(track.available_output_routing_channels)
+        hit = None
+        for c in avail:
+            if c.display_name.strip().lower() == want_c.strip().lower():
+                hit = c
+                break
+        if hit is None:
+            for c in avail:
+                if want_c.lower() in c.display_name.lower():
+                    hit = c
+                    break
+        if hit is None:
+            missed["channel"] = _routing_names(avail)
+        else:
+            track.output_routing_channel = hit
+            chose["channel"] = hit.display_name
+    return {"ok": not missed, "actions_version": VERSION,
+            "track": track.name, "chose": chose, "unmatched": missed,
+            "now": {"type": track.output_routing_type.display_name,
+                    "channel": track.output_routing_channel.display_name}}
