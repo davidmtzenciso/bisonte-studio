@@ -83,6 +83,10 @@ def run(command):
         return clips(command)
     if name == "delete_clip":
         return delete_clip(command)
+    if name == "midi_inputs":
+        return midi_inputs(command)
+    if name == "clip_notes":
+        return clip_notes(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -541,3 +545,70 @@ def delete_clip(command):
     slot.delete_clip()
     return {"ok": True, "actions_version": VERSION, "track": track.name,
             "slot": idx, "deleted": name, "has_clip": slot.has_clip}
+
+
+def midi_inputs(command):
+    """Report MIDI tracks' input routing plus what Live currently offers.
+
+    Like inputs() but for has_midi_input tracks. The available types come
+    from Live's MIDI port configuration, so a controller only appears
+    here once its Track/Sync/Remote switches are on in Settings -> Link,
+    Tempo & MIDI. Those switches are an application preference, not part
+    of the LOM, so they stay a manual step.
+    """
+    tracks = []
+    for track in song_of().tracks:
+        try:
+            if not track.has_midi_input:
+                continue
+        except Exception:
+            continue
+        row = {"name": track.name}
+        for attr in ("arm", "current_monitoring_state"):
+            try:
+                row[attr] = getattr(track, attr)
+            except Exception:
+                row[attr] = None
+        try:
+            row["type"] = track.input_routing_type.display_name
+            row["channel"] = track.input_routing_channel.display_name
+            row["available_types"] = _routing_names(
+                track.available_input_routing_types)
+            row["available_channels"] = _routing_names(
+                track.available_input_routing_channels)
+        except Exception as e:
+            row["error"] = str(e)
+        tracks.append(row)
+    return {"ok": True, "actions_version": VERSION,
+            "midi_tracks": tracks, "track_count": len(song_of().tracks)}
+
+
+def clip_notes(command):
+    """Count and sample the notes in a MIDI clip - proof that a
+    controller actually reached Live, not just that a clip exists.
+
+    {"cmd":"clip_notes","track":"1-MIDI","slot":0}
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    idx = int(command.get("slot", 0))
+    try:
+        slot = track.clip_slots[idx]
+    except Exception as e:
+        return {"ok": False, "error": "slot %d: %s" % (idx, e)}
+    if not slot.has_clip:
+        return {"ok": True, "actions_version": VERSION,
+                "track": track.name, "slot": idx, "note": "slot is empty"}
+    clip = slot.clip
+    out = {"ok": True, "actions_version": VERSION, "track": track.name,
+           "slot": idx, "clip": clip.name, "length": clip.length}
+    try:
+        notes = clip.get_notes_extended(0, 128, 0.0, clip.length)
+        out["note_count"] = len(notes)
+        out["notes"] = [{"pitch": n.pitch, "start": round(n.start_time, 3),
+                         "velocity": n.velocity} for n in notes[:12]]
+    except Exception as e:
+        out["notes_error"] = str(e)
+    return out
