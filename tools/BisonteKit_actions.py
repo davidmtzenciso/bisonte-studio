@@ -97,6 +97,8 @@ def run(command):
         return outputs(command)
     if name == "route_out":
         return route_out(command)
+    if name == "load_instrument":
+        return load_instrument(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -809,3 +811,32 @@ def route_out(command):
             "track": track.name, "chose": chose, "unmatched": missed,
             "now": {"type": track.output_routing_type.display_name,
                     "channel": track.output_routing_channel.display_name}}
+
+
+def load_instrument(command):
+    """Put an instrument on a MIDI track so Note Mode is audible.
+
+    {"cmd":"load_instrument","track":"1-MIDI","name":"Drum Rack"}
+
+    Move's pads send notes to whichever track Live has selected, but a
+    bare MIDI track makes no sound - which reads as "MIDI still broken"
+    when it is only an empty track. Uses the same select-then-load_item
+    path as build(); hotswap_target is only needed for drum PADS.
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    want = command.get("name") or "Drum Rack"
+    browser = Live.Application.get_application().browser
+    item = find_device(browser, want)
+    if item is None:
+        return {"ok": False, "error": "no loadable device matching %r" % want}
+    song = song_of()
+    song.view.selected_track = track
+    before = len(track.devices)
+    browser.load_item(item)
+    return {"ok": True, "actions_version": VERSION, "track": track.name,
+            "loaded": getattr(item, "name", str(item)),
+            "devices_before": before, "devices_after": len(track.devices),
+            "devices": [d.name for d in track.devices]}
