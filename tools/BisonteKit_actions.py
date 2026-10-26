@@ -75,6 +75,14 @@ def run(command):
         return levels(command)
     if name == "track_set":
         return track_set(command)
+    if name == "fire":
+        return fire(command)
+    if name == "transport":
+        return transport(command)
+    if name == "clips":
+        return clips(command)
+    if name == "delete_clip":
+        return delete_clip(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -447,3 +455,89 @@ def track_set(command):
             done["arm_error"] = str(e)
     return {"ok": True, "actions_version": VERSION,
             "track": track.name, "applied": done}
+
+
+def fire(command):
+    """Fire a clip slot. On an armed audio track with an EMPTY slot this
+    starts recording into it; Session view keeps it contained to this
+    track rather than rolling the whole arrangement.
+
+    {"cmd":"fire","track":"Ch2 Mic","slot":0}
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    idx = int(command.get("slot", 0))
+    try:
+        slot = track.clip_slots[idx]
+    except Exception as e:
+        return {"ok": False, "error": "slot %d: %s" % (idx, e)}
+    had = slot.has_clip
+    slot.fire()
+    return {"ok": True, "actions_version": VERSION, "track": track.name,
+            "slot": idx, "had_clip_before": had,
+            "is_recording": getattr(slot, "is_recording", None)}
+
+
+def transport(command):
+    """Start or stop the transport. {"cmd":"transport","action":"stop"}"""
+    song = song_of()
+    act = command.get("action", "")
+    try:
+        if act == "stop":
+            song.stop_playing()
+        elif act == "play":
+            song.start_playing()
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "actions_version": VERSION, "action": act,
+            "is_playing": song.is_playing}
+
+
+def clips(command):
+    """Report the clips on a track, with length and sample path if audio."""
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    out = []
+    for i, slot in enumerate(track.clip_slots):
+        if not slot.has_clip:
+            continue
+        clip = slot.clip
+        row = {"slot": i, "name": clip.name, "length": clip.length,
+               "is_recording": getattr(slot, "is_recording", None)}
+        for attr in ("file_path", "sample_length"):
+            try:
+                row[attr] = getattr(clip, attr)
+            except Exception:
+                pass
+        out.append(row)
+    return {"ok": True, "actions_version": VERSION,
+            "track": track.name, "clips": out}
+
+
+def delete_clip(command):
+    """Remove a clip from a slot. Does NOT delete the recorded sample on
+    disk - Live keeps that in the project's Samples/Recorded folder, and
+    throwing away someone's audio is not this command's business.
+
+    {"cmd":"delete_clip","track":"Ch2 Mic","slot":0}
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    idx = int(command.get("slot", 0))
+    try:
+        slot = track.clip_slots[idx]
+    except Exception as e:
+        return {"ok": False, "error": "slot %d: %s" % (idx, e)}
+    if not slot.has_clip:
+        return {"ok": True, "actions_version": VERSION,
+                "track": track.name, "slot": idx, "note": "already empty"}
+    name = slot.clip.name
+    slot.delete_clip()
+    return {"ok": True, "actions_version": VERSION, "track": track.name,
+            "slot": idx, "deleted": name, "has_clip": slot.has_clip}
