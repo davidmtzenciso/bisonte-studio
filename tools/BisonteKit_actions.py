@@ -87,6 +87,8 @@ def run(command):
         return midi_inputs(command)
     if name == "clip_notes":
         return clip_notes(command)
+    if name == "midi_track":
+        return midi_track(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -612,3 +614,51 @@ def clip_notes(command):
     except Exception as e:
         out["notes_error"] = str(e)
     return out
+
+
+def midi_track(command):
+    """Create or reuse a MIDI track, point it at one input, arm it.
+
+    {"cmd":"midi_track","name":"T-Ext","type":"External Port","arm":true}
+
+    The audio-side rec() cannot do this: create_midi_track is a separate
+    call and a MIDI track has no headamp or channel pair to match. Type
+    is matched as a substring of Live's display name.
+    """
+    song = song_of()
+    title = command.get("name") or "MIDI In"
+    want = (command.get("type") or "").lower()
+
+    track = track_named(title)
+    created = False
+    if track is None:
+        song.create_midi_track(-1)
+        track = song.tracks[len(song.tracks) - 1]
+        try:
+            track.name = title
+        except Exception:
+            pass
+        created = True
+
+    chose, missed = {}, {}
+    if want:
+        hit = None
+        for t in track.available_input_routing_types:
+            if want in t.display_name.lower():
+                hit = t
+                break
+        if hit is None:
+            missed["type"] = _routing_names(
+                track.available_input_routing_types)
+        else:
+            track.input_routing_type = hit
+            chose["type"] = hit.display_name
+    if command.get("arm"):
+        try:
+            track.arm = 1
+        except Exception as e:
+            missed["arm"] = str(e)
+    return {"ok": not missed, "actions_version": VERSION, "track": title,
+            "created": created, "chose": chose, "unmatched": missed,
+            "now": track.input_routing_type.display_name,
+            "armed": bool(track.arm)}
