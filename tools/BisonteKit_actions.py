@@ -89,6 +89,8 @@ def run(command):
         return clip_notes(command)
     if name == "midi_track":
         return midi_track(command)
+    if name == "surfaces":
+        return surfaces(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -662,3 +664,33 @@ def midi_track(command):
             "created": created, "chose": chose, "unmatched": missed,
             "now": track.input_routing_type.display_name,
             "armed": bool(track.arm)}
+
+
+def surfaces(command):
+    """Report the control surfaces Live has actually INSTANTIATED.
+
+    A surface chosen in Settings -> Link, Tempo & MIDI only becomes a
+    live object here once Live could bind it to its ports. So an empty
+    or None entry means the slot is selected but not engaged - usually
+    because its Input or Output port is unassigned.
+    """
+    app = Live.Application.get_application()
+    rows = []
+    try:
+        css = app.control_surfaces
+    except Exception as e:
+        return {"ok": False, "error": "control_surfaces: %s" % e}
+    for i, cs in enumerate(css):
+        if cs is None:
+            rows.append({"slot": i + 1, "surface": None})
+            continue
+        row = {"slot": i + 1, "surface": type(cs).__name__}
+        for attr in ("name", "instance_name", "_suggested_input_port",
+                     "_suggested_output_port"):
+            try:
+                v = getattr(cs, attr)
+                row[attr] = str(v)
+            except Exception:
+                pass
+        rows.append(row)
+    return {"ok": True, "actions_version": VERSION, "surfaces": rows}
