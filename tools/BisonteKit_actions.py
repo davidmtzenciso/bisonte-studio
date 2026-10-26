@@ -99,6 +99,16 @@ def run(command):
         return route_out(command)
     if name == "load_instrument":
         return load_instrument(command)
+    if name == "browse":
+        return browse(command)
+    if name == "devices":
+        return devices(command)
+    if name == "make_clip":
+        return make_clip(command)
+    if name == "master_levels":
+        return master_levels(command)
+    if name == "load_effect":
+        return load_effect(command)
     if name == "ping":
         return {"ok": True, "actions_version": VERSION}
     return {"ok": False, "error": "unknown cmd %r" % name}
@@ -132,6 +142,29 @@ def probe(command):
     return out
 
 
+def find_drum_rack(device, depth=0):
+    """The Drum Rack inside a device, however deeply nested.
+
+    Factory kits are an Instrument Rack wrapping a Drum Rack (plus audio
+    effect racks), so taking track.devices[0] and reading .drum_pads
+    raises "Only drum racks can have pads!" on a perfectly good kit.
+    """
+    if device is None or depth > 4:
+        return None
+    if getattr(device, "can_have_drum_pads", False):
+        return device
+    try:
+        chains = list(getattr(device, "chains", []) or [])
+    except Exception:
+        return None
+    for chain in chains:
+        for inner in list(getattr(chain, "devices", []) or []):
+            hit = find_drum_rack(inner, depth + 1)
+            if hit is not None:
+                return hit
+    return None
+
+
 def cells(command):
     """What the LOM thinks is on each pad - compare against the saved .als,
     which is the only ground truth for a pad's real receiving note."""
@@ -141,7 +174,10 @@ def cells(command):
         return {"ok": False, "error": "no such track"}
     if not len(track.devices):
         return {"ok": False, "error": "track has no devices"}
-    rack = track.devices[0]
+    rack = find_drum_rack(track.devices[0])
+    if rack is None:
+        return {"ok": False, "error": "no drum rack on %r (device is %r)"
+                % (track.name, track.devices[0].name)}
     rows = []
     for pad in rack.drum_pads:
         try:
@@ -418,13 +454,20 @@ def levels(command):
     already in the monitor path.
     """
     rows = []
+    only_audio = bool(command.get("audio_only"))
     for track in song_of().tracks:
         try:
-            if not track.has_audio_input:
+            if only_audio and not track.has_audio_input:
                 continue
         except Exception:
             continue
         row = {"name": track.name}
+        try:
+            row["devices"] = [
+                {"name": d.name, "on": bool(getattr(d, "is_active", True))}
+                for d in track.devices]
+        except Exception:
+            pass
         for attr in ("arm", "current_monitoring_state",
                      "input_meter_level", "output_meter_level"):
             try:
@@ -840,3 +883,234 @@ def load_instrument(command):
             "loaded": getattr(item, "name", str(item)),
             "devices_before": before, "devices_after": len(track.devices),
             "devices": [d.name for d in track.devices]}
+
+
+def browse(command):
+    """List what is loadable under a browser root, so names can be picked
+    rather than guessed.
+
+    {"cmd":"browse","root":"instruments"}
+    {"cmd":"browse","root":"instruments","path":"Drift/Bass"}
+
+    root: instruments | drums | sounds | user | packs | samples
+    Descends `path` by name, case-insensitively, one level per segment.
+    """
+    browser = Live.Application.get_application().browser
+    roots = {}
+    for key in ("instruments", "drums", "sounds", "user_library",
+                "packs", "samples", "audio_effects", "midi_effects"):
+        r = getattr(browser, key, None)
+        if r is not None:
+            roots[key] = r
+            if key == "user_library":
+                roots["user"] = r
+    want = (command.get("root") or "instruments").lower()
+    node = roots.get(want)
+    if node is None:
+        return {"ok": False, "error": "unknown root %r" % want,
+                "roots": sorted(roots)}
+    trail = []
+    for part in (command.get("path") or "").split("/"):
+        part = part.strip()
+        if not part:
+            continue
+        hit = None
+        for c in children_of(node):
+            if (c.name or "").lower() == part.lower():
+                hit = c
+                break
+        if hit is None:
+            return {"ok": False, "error": "no child %r" % part,
+                    "under": "/".join(trail) or want,
+                    "available": [c.name for c in children_of(node)][:60]}
+        node, _ = hit, trail.append(part)
+    items, folders = [], []
+    for c in children_of(node):
+        nm = c.name or ""
+        if getattr(c, "is_loadable", False):
+            items.append(nm)
+        else:
+            folders.append(nm)
+    off = int(command.get("offset", 0))
+    lim = int(command.get("limit", 60))
+    return {"ok": True, "actions_version": VERSION, "root": want,
+            "path": "/".join(trail), "folders": folders[off:off + lim],
+            "loadable": items[off:off + lim], "offset": off, "limit": lim,
+            "counts": {"folders": len(folders), "loadable": len(items)}}
+
+
+def devices(command):
+    """Walk a track's device tree: racks, chains and nested devices.
+
+    Factory kits are not always a bare Drum Rack - several are an
+    Instrument Rack wrapping one, which is why cells() can report
+    "Only drum racks can have pads!" on a perfectly good kit.
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+
+    def describe(dev, depth=0):
+        row = {"depth": depth, "name": dev.name,
+               "class": dev.class_name,
+               "can_have_drum_pads": bool(
+                   getattr(dev, "can_have_drum_pads", False)),
+               "can_have_chains": bool(
+                   getattr(dev, "can_have_chains", False))}
+        out = [row]
+        if depth > 3:
+            return out
+        try:
+            chains = list(getattr(dev, "chains", []) or [])
+        except Exception:
+            chains = []
+        for ch in chains[:8]:
+            out.append({"depth": depth + 1, "chain": ch.name})
+            for d in list(getattr(ch, "devices", []) or [])[:8]:
+                out.extend(describe(d, depth + 2))
+        return out
+
+    rows = []
+    for dev in track.devices:
+        rows.extend(describe(dev))
+    return {"ok": True, "actions_version": VERSION,
+            "track": track.name, "tree": rows}
+
+
+def euclid_hits(pulses, steps, rotation=0):
+    """Bjorklund: spread `pulses` as evenly as possible over `steps`."""
+    if steps <= 0 or pulses <= 0:
+        return []
+    pattern, counts, remainders = [], [], [pulses]
+    divisor = steps - pulses
+    level = 0
+    while True:
+        counts.append(divisor // remainders[level])
+        remainders.append(divisor % remainders[level])
+        divisor = remainders[level]
+        level += 1
+        if remainders[level] <= 1:
+            break
+    counts.append(divisor)
+
+    def build(lv):
+        if lv == -1:
+            pattern.append(0)
+        elif lv == -2:
+            pattern.append(1)
+        else:
+            for _ in range(counts[lv]):
+                build(lv - 1)
+            if remainders[lv] != 0:
+                build(lv - 2)
+    build(level)
+    i = pattern.index(1)
+    pattern = pattern[i:] + pattern[:i]
+    hits = [n for n, v in enumerate(pattern) if v]
+    if rotation:
+        hits = sorted(((h + rotation) % steps) for h in hits)
+    return hits
+
+
+def make_clip(command):
+    """Write a MIDI clip from explicit notes or Euclidean parts.
+
+    {"cmd":"make_clip","track":"1-Deep Space Kit","slot":0,"bars":1,
+     "parts":[{"pitch":36,"pulses":4,"steps":16},
+              {"pitch":38,"pulses":2,"steps":16,"rotation":4},
+              {"pitch":42,"pulses":7,"steps":16,"velocity":80}]}
+
+    Names the clip after its own arguments, per the repo's seed rule, so
+    any pattern can be regenerated from the name alone.
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    idx = int(command.get("slot", 0))
+    bars = float(command.get("bars", 1))
+    beats = bars * 4.0
+    slot = track.clip_slots[idx]
+    if slot.has_clip:
+        slot.delete_clip()
+    slot.create_clip(beats)
+    clip = slot.clip
+
+    notes, label = [], []
+    for part in command.get("parts", []):
+        pitch = int(part["pitch"])
+        steps = int(part.get("steps", 16))
+        pulses = int(part.get("pulses", 4))
+        rot = int(part.get("rotation", 0))
+        vel = int(part.get("velocity", 100))
+        dur = beats / steps * float(part.get("gate", 0.5))
+        for h in euclid_hits(pulses, steps, rot):
+            notes.append((pitch, h * (beats / steps), dur, vel, False))
+        label.append("%d:%d/%d%s" % (pitch, pulses, steps,
+                                     "+%d" % rot if rot else ""))
+    if notes:
+        clip.select_all_notes()
+        clip.replace_selected_notes(tuple(notes))
+    try:
+        clip.name = "~euclid " + " ".join(label)
+        clip.looping = True
+    except Exception:
+        pass
+    return {"ok": True, "actions_version": VERSION, "track": track.name,
+            "slot": idx, "clip": clip.name, "length": clip.length,
+            "notes": len(notes)}
+
+
+def master_levels(command):
+    """Master/main output meter - is Live making ANY sound at all?"""
+    song = song_of()
+    out = {"ok": True, "actions_version": VERSION}
+    try:
+        m = song.master_track
+        out["master"] = {
+            "name": m.name,
+            "output_meter_left": m.output_meter_left,
+            "output_meter_right": m.output_meter_right,
+            "output_meter_level": m.output_meter_level,
+            "volume": m.mixer_device.volume.value}
+    except Exception as e:
+        out["master_error"] = str(e)
+    out["is_playing"] = song.is_playing
+    out["tempo"] = song.tempo
+    return out
+
+
+def load_effect(command):
+    """Load an audio or MIDI effect onto a track.
+
+    {"cmd":"load_effect","track":"Mic","name":"Auto Shift"}
+
+    load_instrument() only searches drums/instruments/sounds, so effects
+    were unreachable. Effects append to the chain rather than replacing,
+    which is what you want for a signal chain.
+    """
+    track = track_named(command.get("track", ""))
+    if track is None:
+        return {"ok": False, "error": "no track named %r"
+                % command.get("track")}
+    want = command.get("name") or ""
+    browser = Live.Application.get_application().browser
+    item = None
+    for key in ("audio_effects", "midi_effects"):
+        root = getattr(browser, key, None)
+        if root is None:
+            continue
+        hit = walk(root, want, limit=3)
+        if hit is not None and getattr(hit, "is_loadable", False):
+            item = hit
+            break
+    if item is None:
+        return {"ok": False, "error": "no loadable effect matching %r" % want}
+    song = song_of()
+    song.view.selected_track = track
+    before = [d.name for d in track.devices]
+    browser.load_item(item)
+    return {"ok": True, "actions_version": VERSION, "track": track.name,
+            "loaded": getattr(item, "name", str(item)),
+            "before": before, "after": [d.name for d in track.devices]}

@@ -124,6 +124,26 @@ lock it. The entry then reads `Standalone` to switch back.
 Control Live (the manual only says Move *Manager* is inaccessible). Monitoring
 raw MIDI is the only reliable test.
 
+**Live only scans for control surfaces at startup — restart it after a Move
+mode switch.** Switching Move to Control Live while Live is already running
+leaves the handshake undone: the pads stay dark, and Move sends unmapped data
+(pitches 0-5, 87-96) instead of behaving as a surface. Restarting Live fixed it
+immediately on 2026-10-26. Toggling the slot to None and back is the cheaper
+first try.
+
+**A silent Live is usually the audio OUTPUT device, not the instrument.** On
+2026-10-26 four instruments were swapped chasing "no sound" when the master
+meter read 0.92 and the MR18's own meters read -81 dB: the audio was real and
+going somewhere else entirely. Move in Control Live registers an extra Core
+Audio device ("Ableton Move Audio") which Live may select on its own. **Read
+`master_levels` BEFORE swapping anything** - if master is moving, the
+instrument is fine and the fault is downstream.
+
+**Restarting Live discards an unsaved Set, including everything scripted into
+it.** A whole session of loaded kits, routing and a recorded take was lost this
+way. Save before any restart, and save before switching Move modes, since a
+mode switch is what forces the restart.
+
 **In Control Live, Move is a control surface, not a keyboard.** It disarms the
 MIDI tracks, manages arming itself, and creates its own clips. What arrives is
 its control layer (pitches 87–96 at velocity 1), not playable notes — press
