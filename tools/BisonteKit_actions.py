@@ -667,12 +667,15 @@ def midi_track(command):
 
 
 def surfaces(command):
-    """Report the control surfaces Live has actually INSTANTIATED.
+    """Report the control surfaces Live has instantiated, per slot.
 
-    A surface chosen in Settings -> Link, Tempo & MIDI only becomes a
-    live object here once Live could bind it to its ports. So an empty
-    or None entry means the slot is selected but not engaged - usually
-    because its Input or Output port is unassigned.
+    Shows which slots are OCCUPIED. It does NOT show whether a surface's
+    MIDI ports are bound: Live instantiates a selected script with or
+    without ports, and BisonteKit itself is proof - it sits in a slot and
+    talks over files with no MIDI port at all. Port assignments live in
+    Preferences.cfg, which is binary and not readable here, so whether a
+    surface can actually reach its hardware has to be read off the pane
+    in Settings -> Link, Tempo & MIDI.
     """
     app = Live.Application.get_application()
     rows = []
